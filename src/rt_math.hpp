@@ -48,7 +48,7 @@ template <typename T> struct Xyz {
   Xyz<T> operator-() const { return Xyz<T>(-x, -y, -z); }
   // when doing std::cout << xyz;
   friend std::ostream& operator<<(std::ostream& os, const Xyz& xyz) {
-      os << "(" <<  xyz.x << ", " << xyz.y << ", " << xyz.z << ")";
+      os << "[" <<  xyz.x << ", " << xyz.y << ", " << xyz.z << "]";
       return os;
   }
   //------------------------------------------------------------------------------
