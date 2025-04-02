@@ -1,5 +1,5 @@
-#ifndef XYZ_H
-#define XYZ_H
+#ifndef RT_MATH_H 
+#define RT_MATH_H
 
 #include <cmath>
 #include <cstdint>
@@ -96,4 +96,84 @@ template <typename T> struct Xyz {
   SCALAR2VEC_OPS(*)
 #undef SCALAR2VEC_OPS
 
-#endif // XYZ_H
+
+//-------------------------------------------------------------------------------
+// Matrix operations 
+//-------------------------------------------------------------------------------
+class Matrix3x3 {
+public:
+  Matrix3x3() {
+    rows[0] = Xyz<float>(1.0f, 0.0f, 0.0f);
+    rows[1] = Xyz<float>(0.0f, 1.0f, 0.0f);
+    rows[2] = Xyz<float>(0.0f, 0.0f, 1.0f);
+  }
+  Matrix3x3(float anglex_rad, float angley_rad, float anglez_rad) {
+    // create a rotation matrix from Euler angles
+    // start with identity (default constructor)
+    *this = Matrix3x3();
+    // apply rotations in ZYX order (Z, then Y, then X) as a convention
+    RotateZ(anglez_rad);
+    RotateY(angley_rad);
+    RotateX(anglex_rad);
+  }
+  // matrix to vector multiplication 
+  Xyz<float> operator*(const Xyz<float>& v) const {
+    return Xyz<float>(
+      rows[0].dot(v),
+      rows[1].dot(v),
+      rows[2].dot(v)
+    );
+  }
+  // matrix to matrix multiplication 
+  Matrix3x3 operator*(const Matrix3x3& other) const {
+    Matrix3x3 result;
+    // transpose the other matrix to take dot products later
+    Xyz<float> otherCols[3] = {
+      Xyz<float>(other.rows[0].x, other.rows[1].x, other.rows[2].x),
+      Xyz<float>(other.rows[0].y, other.rows[1].y, other.rows[2].y),
+      Xyz<float>(other.rows[0].z, other.rows[1].z, other.rows[2].z)
+    };
+    for (int i = 0; i < 3; i++) {
+      result.rows[i].x = rows[i].dot(otherCols[0]);
+      result.rows[i].y = rows[i].dot(otherCols[1]);
+      result.rows[i].z = rows[i].dot(otherCols[2]);
+    }
+    return result;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Matrix3x3& m) {
+    os << "[" << m.rows[0] << std::endl
+       << " " << m.rows[1] << std::endl
+       << " " << m.rows[2] << "]";
+    return os;
+  }
+
+private:
+  Xyz<float> rows[3];
+  void RotateX(float angle) {
+    const float c = cos(angle), s = sin(angle);
+    Matrix3x3 rotX;
+    rotX.rows[0] = Xyz<float>(1, 0, 0);
+    rotX.rows[1] = Xyz<float>(0, c, -s);
+    rotX.rows[2] = Xyz<float>(0, s, c);
+    *this = rotX * (*this);
+  }
+  void RotateY(float angle) {
+    const float c = cos(angle), s = sin(angle);
+    Matrix3x3 rotY;
+    rotY.rows[0] = Xyz<float>(c , 0, s);
+    rotY.rows[1] = Xyz<float>(0 , 1, 0);
+    rotY.rows[2] = Xyz<float>(-s, 0, c);
+    *this = rotY * (*this);
+  }
+  void RotateZ(float angle) {
+    const float c = cos(angle), s = sin(angle);
+    Matrix3x3 rotZ;
+    rotZ.rows[0] = Xyz<float>(c, -s, 0);
+    rotZ.rows[1] = Xyz<float>(s, c , 0);
+    rotZ.rows[2] = Xyz<float>(0, 0 , 1);
+    *this = rotZ * (*this);
+  }
+};
+
+#endif // RT_MATH_H
