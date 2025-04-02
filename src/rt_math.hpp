@@ -91,8 +91,13 @@ template <typename T> struct Xyz {
   auto operator OP (U scalar, const Xyz<T> &vec) -> Xyz<decltype(U{} OP T{})> { \
     return vec OP scalar; \
   }
+  template <typename T, typename U>
+  auto operator -(U scalar, const Xyz<T> &vec) -> Xyz<decltype(U{} - T{})> {
+    return Xyz<decltype(U{} - T{})> {
+       scalar - vec.x, scalar - vec.y, scalar - vec.z, 
+    };
+  }
   SCALAR2VEC_OPS(+)
-  SCALAR2VEC_OPS(-)
   SCALAR2VEC_OPS(*)
 #undef SCALAR2VEC_OPS
 
