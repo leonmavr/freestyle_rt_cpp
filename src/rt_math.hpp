@@ -28,6 +28,18 @@ template <typename T> struct Xyz {
     VECTOR_OPS(*)
     VECTOR_OPS(/)
   #undef VECTOR_OPS
+  #define PREFIX_OPS(OP)                                                         \
+    Xyz<T>& operator OP(const Xyz<T> &other) {                                   \
+      x OP other.x;                                                              \
+      y OP other.y;                                                              \
+      z OP other.z;                                                              \
+      return *this;                                                              \
+    }
+    PREFIX_OPS(+=)
+    PREFIX_OPS(-=)
+    PREFIX_OPS(*=)
+    PREFIX_OPS(/=)
+  #undef PREFIX_OPS
   //------------------------------------------------------------------------------
   // vector to scalar overloaded operators
   //------------------------------------------------------------------------------
@@ -41,6 +53,19 @@ template <typename T> struct Xyz {
     SCALAR_OPS(*)
     SCALAR_OPS(/)
   #undef SCALAR_OPS
+  #define PREFIX_OPS(OP)                                                         \
+    template <typename U>                                                        \
+    Xyz<T>& operator OP(const U scalar) {                                        \
+      x OP scalar;                                                               \
+      y OP scalar;                                                               \
+      z OP scalar;                                                               \
+      return *this;                                                              \
+    }
+    PREFIX_OPS(+=)
+    PREFIX_OPS(-=)
+    PREFIX_OPS(*=)
+    PREFIX_OPS(/=)
+  #undef PREFIX_OPS
   //------------------------------------------------------------------------------
   // other operators 
   //------------------------------------------------------------------------------
