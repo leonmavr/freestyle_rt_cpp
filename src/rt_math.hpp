@@ -7,9 +7,9 @@
 
 template <typename T> struct Xyz;
 // aliases for different types of data - use those for operations
-using Vec3u8 = Xyz<uint8_t>;
+using Vec3u8  = Xyz<uint8_t>;
 using Vec3i32 = Xyz<int32_t>;
-using Vec3f = Xyz<float>;
+using Vec3f   = Xyz<float>;
 
 template <typename T> struct Xyz {
   T x, y, z;
@@ -21,7 +21,7 @@ template <typename T> struct Xyz {
   //------------------------------------------------------------------------------
   #define VECTOR_OPS(OP)                                                         \
     Xyz<T> operator OP(const Xyz<T> &other) const {                              \
-        return Xyz<T>(x OP other.x, y OP other.y, z OP other.z);                 \
+      return Xyz<T>(x OP other.x, y OP other.y, z OP other.z);                   \
     }                                                                            \
     Xyz<T>& operator OP(const Xyz<T> &other) {                                   \
       x OP##= other.x;                                                           \
@@ -40,7 +40,7 @@ template <typename T> struct Xyz {
   #define SCALAR_OPS(OP)                                                         \
     template <typename U>                                                        \
     auto operator OP(const U scalar) const -> Xyz<decltype(T{} OP U{})> {        \
-        return Xyz<decltype(T{} OP U{})>(x OP scalar, y OP scalar, z OP scalar); \
+      return Xyz<decltype(T{} OP U{})>(x OP scalar, y OP scalar, z OP scalar); \
     }                                                                            \
     template <typename U>                                                        \
     Xyz<T>& operator OP(const U scalar) {                                        \
@@ -61,8 +61,8 @@ template <typename T> struct Xyz {
   Xyz<T> operator-() const { return Xyz<T>(-x, -y, -z); }
   // when doing std::cout << xyz;
   friend std::ostream& operator<<(std::ostream& os, const Xyz& xyz) {
-      os << "[" <<  xyz.x << ", " << xyz.y << ", " << xyz.z << "]";
-      return os;
+    os << "[" <<  xyz.x << ", " << xyz.y << ", " << xyz.z << "]";
+    return os;
   }
   //------------------------------------------------------------------------------
   // common vector operations
