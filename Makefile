@@ -9,7 +9,7 @@ CXXFLAGS = -O3 -I$(INC_DIR) -Wall -std=c++11
 LDFLAGS = -lm
 
 # Get all source files
-SRC = $(wildcard $(SRC_DIR)/*.cpp)
+SRC = $(wildcard $(SRC_DIR)/*.cpp wildcard $(SRC_DIR)/*.hpp)
 TEST_SRC = $(wildcard $(TEST_DIR)/*.cpp)
 DEMO_SRC = $(wildcard $(DEMO_DIR)/*.cpp)
 
