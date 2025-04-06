@@ -22,24 +22,18 @@ template <typename T> struct Xyz {
   #define VECTOR_OPS(OP)                                                         \
     Xyz<T> operator OP(const Xyz<T> &other) const {                              \
         return Xyz<T>(x OP other.x, y OP other.y, z OP other.z);                 \
+    }                                                                            \
+    Xyz<T>& operator OP(const Xyz<T> &other) {                                   \
+      x OP##= other.x;                                                           \
+      y OP##= other.y;                                                           \
+      z OP##= other.z;                                                           \
+      return *this;                                                              \
     }
     VECTOR_OPS(+)
     VECTOR_OPS(-)
     VECTOR_OPS(*)
     VECTOR_OPS(/)
   #undef VECTOR_OPS
-  #define PREFIX_OPS(OP)                                                         \
-    Xyz<T>& operator OP(const Xyz<T> &other) {                                   \
-      x OP other.x;                                                              \
-      y OP other.y;                                                              \
-      z OP other.z;                                                              \
-      return *this;                                                              \
-    }
-    PREFIX_OPS(+=)
-    PREFIX_OPS(-=)
-    PREFIX_OPS(*=)
-    PREFIX_OPS(/=)
-  #undef PREFIX_OPS
   //------------------------------------------------------------------------------
   // vector to scalar overloaded operators
   //------------------------------------------------------------------------------
@@ -47,25 +41,19 @@ template <typename T> struct Xyz {
     template <typename U>                                                        \
     auto operator OP(const U scalar) const -> Xyz<decltype(T{} OP U{})> {        \
         return Xyz<decltype(T{} OP U{})>(x OP scalar, y OP scalar, z OP scalar); \
+    }                                                                            \
+    template <typename U>                                                        \
+    Xyz<T>& operator OP(const U scalar) {                                        \
+      x OP##= scalar;                                                            \
+      y OP##= scalar;                                                            \
+      z OP##= scalar;                                                            \
+      return *this;                                                              \
     }
     SCALAR_OPS(+)
     SCALAR_OPS(-)
     SCALAR_OPS(*)
     SCALAR_OPS(/)
-  #undef SCALAR_OPS
-  #define PREFIX_OPS(OP)                                                         \
-    template <typename U>                                                        \
-    Xyz<T>& operator OP(const U scalar) {                                        \
-      x OP scalar;                                                               \
-      y OP scalar;                                                               \
-      z OP scalar;                                                               \
-      return *this;                                                              \
-    }
-    PREFIX_OPS(+=)
-    PREFIX_OPS(-=)
-    PREFIX_OPS(*=)
-    PREFIX_OPS(/=)
-  #undef PREFIX_OPS
+  #undef SCALAR_OPS 
   //------------------------------------------------------------------------------
   // other operators 
   //------------------------------------------------------------------------------
