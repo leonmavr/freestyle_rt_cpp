@@ -17,8 +17,7 @@ template <typename T> struct Mat {
         data.resize(height);
         for (auto& row : data) row.resize(width);
     }
-    T at(unsigned x, unsigned y) { return data[x][y]; }
-    // arrows the row to be moified 
+    // allows the row to be modified
     std::vector<T>& operator[](unsigned y) { return data[y]; }
     // returns a copy
     const std::vector<T>& operator[](unsigned y) const { return data[y]; }
