@@ -2,25 +2,30 @@
 #define COMMON_HPP
 
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
-typedef struct {
-    uint8_t r, g, b; 
-} Rgb;
-
-
-template <typename T> struct Mat {
-    unsigned width, height;
-    std::vector<std::vector<T>> data;
-    Mat(unsigned) = delete;
-    Mat(unsigned w, unsigned h) : width(w), height(h) {
-        data.resize(height);
-        for (auto& row : data) row.resize(width);
-    }
-    // allows the row to be modified
-    std::vector<T>& operator[](unsigned y) { return data[y]; }
-    // returns a copy
-    const std::vector<T>& operator[](unsigned y) const { return data[y]; }
+struct Rgb {
+  uint8_t r, g, b;
 };
 
-#endif // COMMON_HPP
+template <typename T>
+struct Mat {
+  unsigned width, height;
+  std::vector<T> data;
+  Mat(unsigned) = delete;
+  Mat(unsigned w, unsigned h) : width(w), height(h), data(w * h) {}
+
+  T& at(unsigned row, unsigned col) {
+    if (row >= height || col >= width) [[unlikely]]
+      throw std::out_of_range("Mat::at(row, col): index out of bounds");
+    return data[row * width + col];
+  }
+  const T& at(unsigned row, unsigned col) const {
+    if (row >= height || col >= width) [[unlikely]]
+      throw std::out_of_range("Mat::at(row, col): index out of bounds");
+    return data[row * width + col];
+  }
+};
+
+#endif  // COMMON_HPP
