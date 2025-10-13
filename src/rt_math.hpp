@@ -17,139 +17,181 @@ using Vec3f   = Xyz<float>;
 template <typename T>
 struct Xyz {
   std::array<T, 3> xyz;
-  Xyz() : xyz() {}
-  Xyz(T x, T y, T z) : xyz({x, y, z}) {}
-  explicit Xyz(T val) : xyz(val, val, val) {}
-  T x() const { return xyz[0]; }
-  T y() const { return xyz[1]; }
-  T z() const { return xyz[2]; }
-  //---------------------------------------------------------------------------
-  // vector to vector overloaded operators
-  //---------------------------------------------------------------------------
-  #define VECTOR_OPS(OP)                                                      \
-    Xyz<T> operator OP(const Xyz<T>& other) const {                           \
-      return Xyz<T>(xyz[0] OP other[0],                                       \
-                    xyz[1] OP other[1],                                       \
-                    xyz[2] OP other[2]);                                      \
-    }                                                                         \
-    Xyz<T>& operator OP(const Xyz<T>& other) {                                \
-      this[0] OP## = other[0];                                                \
-      this[1] OP## = other[2];                                                \
-      this[2] OP## = other[3];                                                \
-      return *this;                                                           \
+  // references to elements [0], [1], [2] respectively
+  T& x, y, z; 
+  Xyz() : xyz({T{}, T{}, T{}}), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+  Xyz(T x, T y, T z) : xyz({x, y, z}), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+  // explicit to avoid converting floats or ints to Xyz
+  explicit Xyz(T val) : xyz({val, val, val}), 
+                        x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+
+  Xyz(const Xyz<T>& other) 
+    : xyz(other.xyz), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+  
+  Xyz<T>& operator=(const Xyz<T>& other) {
+    if (this != &other) {
+      // copy array only - x, y, z already reference it
+      xyz = other.xyz;
     }
+    return *this;
+  }
+  
+  Xyz(Xyz<T>&& other) noexcept
+    : xyz(std::move(other.xyz)), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
+  
+  Xyz<T>& operator=(Xyz<T>&& other) noexcept {
+    if (this != &other) xyz = std::move(other.xyz);
+    return *this;
+  }
+
+  //---------------------------------------------------------------------
+  // vector to vector overloaded operators
+  //---------------------------------------------------------------------
+  #define VECTOR_OPS(OP)                                                \
+    template <typename U>                                               \
+    auto operator OP(const Xyz<U>& other) const ->                      \
+    Xyz<decltype(T{} OP U{})> {                                         \
+      return Xyz<decltype(T{} OP U{})>(                                 \
+          xyz[0] OP other.xyz[0],                                       \
+          xyz[1] OP other.xyz[1],                                       \
+          xyz[2] OP other.xyz[2]                                        \
+      );                                                                \
+    }                                                                   \
+                                                                        \
+    template <typename U>                                               \
+    Xyz<T>& operator OP##=(const Xyz<U>& other) {                       \
+      xyz[0] OP##= other.xyz[0];                                        \
+      xyz[1] OP##= other.xyz[1];                                        \
+      xyz[2] OP##= other.xyz[2];                                        \
+      return *this;                                                     \
+    }
+
     VECTOR_OPS(+)
     VECTOR_OPS(-)
     VECTOR_OPS(*)
     VECTOR_OPS(/)
   #undef VECTOR_OPS
-  //---------------------------------------------------------------------------
-  // vector to scalar overloaded operators
-  //---------------------------------------------------------------------------
-  #define SCALAR_OPS(OP)                                                      \
-    template <typename U>                                                     \
-    auto operator OP(const U scalar) const->Xyz<decltype(T {} OP U{})> {      \
-      return Xyz<decltype(T {} OP U{})>                                       \
-        (xyz[0] OP scalar,                                                    \
-         xyz[1] OP scalar,                                                    \
-         xyz[2] OP scalar);                                                   \
-    }                                                                         \
-    template <typename U>                                                     \
-    Xyz<T>& operator OP(const U scalar) {                                     \
-      xyz[0] OP## = scalar;                                                   \
-      xyz[1] OP## = scalar;                                                   \
-      xyz[2] OP## = scalar;                                                   \
-      return *this;                                                           \
+  //---------------------------------------------------------------------
+  // vector to scalar overloaded operator
+  //---------------------------------------------------------------------
+  // int type OP floating type operations are not properly supported
+  #define SCALAR_OPS(OP)                                                \
+    template <typename U>                                               \
+    auto operator OP(const U scalar) const->                            \
+      Xyz<decltype(T {} OP U{})> {                                      \
+      return Xyz<decltype(T {} OP U{})>                                 \
+        (xyz[0] OP scalar,                                              \
+         xyz[1] OP scalar,                                              \
+         xyz[2] OP scalar);                                             \
+    }                                                                   \
+    template <typename U>                                               \
+    Xyz<T>& operator OP##=(const U scalar) {                            \
+      xyz[0] OP##= scalar;                                              \
+      xyz[1] OP##= scalar;                                              \
+      xyz[2] OP##= scalar;                                              \
+      return *this;                                                     \
     }
     SCALAR_OPS(+)
     SCALAR_OPS(-)
     SCALAR_OPS(*)
     SCALAR_OPS(/)
   #undef SCALAR_OPS
-  //---------------------------------------------------------------------------
+  //--------------------------------------------------------------------
+  // equality operators
+  //--------------------------------------------------------------------
+  bool operator==(const Xyz<T>& other) const {
+    if constexpr (std::is_floating_point_v<T>) {
+      constexpr T eps = static_cast<T>(1e-4);
+      return (std::fabs(xyz[0] - other.xyz[0]) < eps) &&
+             (std::fabs(xyz[1] - other.xyz[1]) < eps) &&
+             (std::fabs(xyz[2] - other.xyz[2]) < eps);
+    } else {
+      return (xyz[0] == other.xyz[0]) &&
+             (xyz[1] == other.xyz[1]) &&
+             (xyz[2] == other.xyz[2]);
+    }
+  }
+
+  bool operator!=(const Xyz<T>& other) const {
+    return !(*this == other);
+  }
+  //---------------------------------------------------------------------
   // other operators
-  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------
   // unary negate
   Xyz<T> operator-() const {
       return Xyz<T>(-xyz[0], -xyz[1], -xyz[2]);
   }
   // index - useful for matrix operations later
-  float operator[](int i) { 
-    if (i >= 0 || i <= 3)
-      return xyz[i];
-    throw std::out_of_range("Vector index out of range");
+  T operator[](int i) const { 
+    if (i < 0 || i > 3) [[unlikely]]
+      throw std::out_of_range("Vector index out of range");
+    return xyz[i];
   }
-  const Xyz<float>& operator[](int i) const { 
-    if (i >= 0 || i <= 3)
-      return xyz[i];
-    throw std::out_of_range("Vector index out of range");
+  T& operator[](int i) { 
+    if (i < 0 || i > 3) [[unlikely]]
+      throw std::out_of_range("Vector index out of range");
+    return xyz[i];
   }
   // when doing std::cout << xyz;
   friend std::ostream& operator<<(std::ostream& os, const Xyz& xyz) {
     os << "[" << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << "]";
     return os;
   }
-  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------
   // common vector operations
-  //---------------------------------------------------------------------------
-  T dot(const Xyz<T>& other) const {
-    return x() * other.x() + y() * other.y() + z() * other.z();
+  //---------------------------------------------------------------------
+  T Dot(const Xyz<T>& other) const {
+    return x * other.x + y * other.y + z * other.z;
   }
-  auto normSq() const -> decltype(T{} * T{}) {
-      return x()*x() + y()*y() + z()*z();
+  auto NormSq() const -> decltype(T{} * T{}) {
+    return x*x + y*y + z*z;
   }
-  float norm() const { return std::sqrt(static_cast<float>(normSq())); }
+  float Norm() const { return std::sqrt(static_cast<float>(NormSq())); }
   Xyz<float> unit() const {
-    float n = norm();
-    return Xyz<float>(x() / n, y() / n, z() / n);
+    float n = Norm();
+    return Xyz<float>(x / n, y / n, z / n);
   }
-  float cos(const Xyz<T>& other) const {
-    const float n1 = norm();
-    const float n2 = other.norm();
-    return dot(other) / (n1 * n2);
+  Xyz<float> Unit() const {
+    return Xyz<float>{x/Norm(), y/Norm(), z/Norm()};
   }
-  float angle(const Xyz<T>& other) const { return std::acos(cos(other)); }
-  Xyz<T> cross(const Xyz<T>& other) const {
-    return Xyz<T>(y() * other.z() - z() * other.y(),
-                  z() * other.x() - x() * other.z(),
-                  x() * other.y() - y() * other.x());
+  float Cos(const Xyz<T>& other) const {
+    if (this != &other) [[likely]] {
+      const float n1 = Norm();
+      const float n2 = other.Norm();
+      return Dot(other) / (n1 * n2);
+    } else {
+      return 1.0;
+    }
   }
-  void reflectAbout(const Xyz<T>& axis) {
-    // idea and formula from Bisqwit: youtube.com/watch?v=N8elxpSu9pw&t=208s
+  float Angle(const Xyz<T>& other) const { return std::acos(Cos(other)); }
+  Xyz<T> Cross(const Xyz<T>& other) const {
+    return Xyz<T>(y * other.z - z * other.y,
+                  z * other.x - x * other.z,
+                  x * other.y - y * other.x);
+  }
+  void ReflectAbout(const Xyz<T>& axis) {
+    // idea and formula from Bisqwit:
+    // youtube.com/watch?v=N8elxpSu9pw&t=208s
     const auto n = axis.unit();
-    double v = dot(n);
+    double v = Dot(n);
     *this =
-        Xyz<T>(static_cast<T>(2 * v * n.x - x()),
-               static_cast<T>(2 * v * n.y - y()),
-               static_cast<T>(2 * v * n.z - z()));
+        Xyz<T>(static_cast<T>(2 * v * n.x - x),
+               static_cast<T>(2 * v * n.y - y),
+               static_cast<T>(2 * v * n.z - z));
   }
 };
 
 
-//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // non-member operations with scalar to vector
-//-----------------------------------------------------------------------------
-#define SCALAR2VEC_OPS(OP)                                                    \
-  template <typename T, typename U>                                           \
-  auto operator OP(U scalar, const Xyz<T>& vec)->Xyz<decltype(U {} OP T{})> { \
-    return vec OP scalar;                                                     \
-  }
-template <typename T, typename U>
-auto operator-(U scalar, const Xyz<T>& vec) -> Xyz<decltype(U{} - T{})> {
-  return Xyz<decltype(U{} - T{})>{
-      scalar - vec.x,
-      scalar - vec.y,
-      scalar - vec.z,
-  };
-}
-SCALAR2VEC_OPS(+)
-SCALAR2VEC_OPS(*)
-#undef SCALAR2VEC_OPS
+//-----------------------------------------------------------------------
+
 
 #if 0
-//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // Matrix operations
-//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------
 class Mat3x3 {
 public:
   Xyz<float> rows[3];
