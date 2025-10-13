@@ -72,7 +72,7 @@ struct Xyz {
     VECTOR_OPS(/)
   #undef VECTOR_OPS
   //---------------------------------------------------------------------
-  // vector to scalar overloaded operator
+  // vector to scalar overloaded operators
   //---------------------------------------------------------------------
   // int type OP floating type operations are not properly supported
   #define SCALAR_OPS(OP)                                                \
@@ -112,8 +112,7 @@ struct Xyz {
     }
   }
 
-  bool operator!=(const Xyz<T>& other) const {
-    return !(*this == other);
+  bool operator!=(const Xyz<T>& other) const { return !(*this == other);
   }
   //---------------------------------------------------------------------
   // other operators
@@ -122,6 +121,7 @@ struct Xyz {
   Xyz<T> operator-() const {
       return Xyz<T>(-xyz[0], -xyz[1], -xyz[2]);
   }
+
   // index - useful for matrix operations later
   T operator[](int i) const { 
     if (i < 0 || i > 3) [[unlikely]]
@@ -133,6 +133,7 @@ struct Xyz {
       throw std::out_of_range("Vector index out of range");
     return xyz[i];
   }
+
   // when doing std::cout << xyz;
   friend std::ostream& operator<<(std::ostream& os, const Xyz& xyz) {
     os << "[" << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << "]";
@@ -144,17 +145,19 @@ struct Xyz {
   T Dot(const Xyz<T>& other) const {
     return x * other.x + y * other.y + z * other.z;
   }
-  auto NormSq() const -> decltype(T{} * T{}) {
-    return x*x + y*y + z*z;
-  }
-  float Norm() const { return std::sqrt(static_cast<float>(NormSq())); }
+  
+  float NormSq() const { return x*x + y*y + z*z; }
+
+  float Norm() const { return std::sqrt(NormSq()); }
   Xyz<float> unit() const {
     float n = Norm();
     return Xyz<float>(x / n, y / n, z / n);
   }
+
   Xyz<float> Unit() const {
     return Xyz<float>{x/Norm(), y/Norm(), z/Norm()};
   }
+
   float Cos(const Xyz<T>& other) const {
     if (this != &other) [[likely]] {
       const float n1 = Norm();
@@ -164,29 +167,24 @@ struct Xyz {
       return 1.0;
     }
   }
+
   float Angle(const Xyz<T>& other) const { return std::acos(Cos(other)); }
   Xyz<T> Cross(const Xyz<T>& other) const {
     return Xyz<T>(y * other.z - z * other.y,
                   z * other.x - x * other.z,
                   x * other.y - y * other.x);
   }
+
   void ReflectAbout(const Xyz<T>& axis) {
     // idea and formula from Bisqwit:
     // youtube.com/watch?v=N8elxpSu9pw&t=208s
     const auto n = axis.unit();
     double v = Dot(n);
-    *this =
-        Xyz<T>(static_cast<T>(2 * v * n.x - x),
-               static_cast<T>(2 * v * n.y - y),
-               static_cast<T>(2 * v * n.z - z));
+    xyz[0] = static_cast<T>(2 * v * n.x - x);
+    xyz[1] = static_cast<T>(2 * v * n.y - y);
+    xyz[2] = static_cast<T>(2 * v * n.z - z);
   }
 };
-
-
-//-----------------------------------------------------------------------
-// non-member operations with scalar to vector
-//-----------------------------------------------------------------------
-
 
 #if 0
 //-----------------------------------------------------------------------
