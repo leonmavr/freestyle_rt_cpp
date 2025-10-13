@@ -1,53 +1,62 @@
-CXX = g++
-SRC_DIR = src
-INC_DIR = src
-TEST_DIR = test
-DEMO_DIR = demos
+#================================================= Makefile =================================================
 
-# Add appropriate C++ flags
-CXXFLAGS = -O3 -I$(INC_DIR) -Wall -std=c++11
-LDFLAGS = -lm
+# Compiles the project assuming it adheres to the following structure:
+#
+# <root directory>
+# |
+# +---- <SRC_DIR> ---+---- subdir1/*.cpp, *.hpp
+# |                  +---- subdir2/*.cpp, *.hpp                       
+# |                  +---- main.cpp
+#
+# All headers are now co-located with their .cpp files inside src/.
 
-# Get all source files
-SRC = $(wildcard $(SRC_DIR)/*.cpp wildcard $(SRC_DIR)/*.hpp)
-TEST_SRC = $(wildcard $(TEST_DIR)/*.cpp)
-DEMO_SRC = $(wildcard $(DEMO_DIR)/*.cpp)
+SHELL    := /bin/bash
+CXX      := g++
+EXEC     := demo 
 
-# Create object file lists
-SRC_OBJ = $(SRC:.cpp=.o)
-TEST_OBJ = $(TEST_SRC:.cpp=.o)
-DEMO_OBJ = $(DEMO_SRC:.cpp=.o)
+SRC_DIR  := src
+OBJ_DIR  := build
 
-# select plotter; PLOTTER=PPM to plot as ppm frames
-ifeq ($(PLOTTER), PPM)
-    CXXFLAGS += -DUSE_PPM
-endif
+# include all subdirectories in src/ (for headers)
+INCDIRS  := $(shell find $(SRC_DIR) -type d 2>/dev/null || true)
+INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 
-# Set up different target paths based on make goal
-ifeq ($(MAKECMDGOALS), test)
-    TARGETS = $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%, $(TEST_SRC))
-else
-    TARGETS = $(patsubst $(DEMO_DIR)/%.cpp, $(DEMO_DIR)/%, $(DEMO_SRC))
-endif
+CXXFLAGS := $(INCLUDES) $(SDL_CFLAGS) -O3 -std=c++17 -Wall -Wextra -MMD -MP
+LDFLAGS  := -lm
+LDLIBS   :=
 
-# Default target
-all: $(TARGETS)
+# all cpp files under src/
+SRCS := $(shell find $(SRC_DIR) -type f -name '*.cpp' -print)
 
-# Test target
-test: $(TARGETS)
+# map src/... to build/src/...
+SRC_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(SRCS))
+OBJECTS  := $(SRC_OBJS)
 
-# Rule for building demo executables
-$(DEMO_DIR)/%: $(DEMO_DIR)/%.o $(SRC_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+# dependency files
+DEPS := $(OBJECTS:.o=.d)
 
-# Rule for building test executables
-$(TEST_DIR)/%: $(TEST_DIR)/%.o $(SRC_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+.PHONY: all clean rebuild
 
-# Compile source files
-%.o: %.cpp
+all: $(EXEC)
+	@echo -e "\n======== Final executable at: ./$(EXEC) ========"
+
+# link everything together 
+$(EXEC): $(OBJECTS)
+	@echo -e "\n======== Linking $@ ========"
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+
+# compile rules
+$(OBJ_DIR)/$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	@echo -e "\n======== Compiling $< -> $@ ========"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-.PHONY: clean all test
+# include dependency info
+-include $(DEPS)
+
 clean:
-	rm -f $(SRC_DIR)/*.o $(TEST_DIR)/*.o $(DEMO_DIR)/*.o $(TARGETS)
+	@echo -e "\n======== Cleaning build artifacts ========"
+	@rm -rf $(OBJ_DIR) $(EXEC)
+
+rebuild: clean all
+
