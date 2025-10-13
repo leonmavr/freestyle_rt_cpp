@@ -1,5 +1,5 @@
-#ifndef RT_MATH_H
-#define RT_MATH_H
+#ifndef VEC_HPP_
+#define VEC_HPP_
 
 #include <cmath>
 #include <cstdint>
@@ -18,6 +18,7 @@ template <typename T>
 struct Xyz {
   std::array<T, 3> xyz;
   // references to elements [0], [1], [2] respectively
+  // TODO: make them accessors
   T& x, y, z; 
   Xyz() : xyz({T{}, T{}, T{}}), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
   Xyz(T x, T y, T z) : xyz({x, y, z}), x(xyz[0]), y(xyz[1]), z(xyz[2]) {}
@@ -186,103 +187,4 @@ struct Xyz {
   }
 };
 
-#if 0
-//-----------------------------------------------------------------------
-// Matrix operations
-//-----------------------------------------------------------------------
-class Mat3x3 {
-public:
-  Xyz<float> rows[3];
-
-  Mat3x3() {
-    rows[0] = Xyz<float>(1, 0, 0);
-    rows[1] = Xyz<float>(0, 1, 0);
-    rows[2] = Xyz<float>(0, 0, 1);
-  }
-
-  Mat3x3(float anglex_rad, float angley_rad, float anglez_rad) {
-    // create a rotation matrix from Euler angles
-    // start with identity (default constructor)
-    *this = Mat3x3();
-    // apply rotations in ZYX order (Z, then Y, then X) as a convention
-    RotateZ(anglez_rad);
-    RotateY(angley_rad);
-    RotateX(anglex_rad);
-  }
-  //---------------------------------------------------------------------
-  // operators
-  //---------------------------------------------------------------------
-  // matrix to vector multiplication
-  Xyz<float> operator*(const Xyz<float>& v) const {
-    return Xyz<float>((*this)[0].dot(v),
-                      (*this)[1].dot(v),
-                      (*this)[2].dot(v));
-  }
-  Mat3x3 operator*(const Mat3x3& other) const {
-    Mat3x3 result;
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            result.rows[i][j] = rows[i].x * other[0][j] +
-                           rows[i].y * other[1][j] +
-                           rows[i].z * other[2][j];
-        }
-    }
-    return result;
-}
-
-
-
-  Mat3x3 Transpose() const {
-    Mat3x3 t;
-    t[0] = Xyz<float>((*this)[0].x, (*this)[1].x, (*this)[2].x);
-    t[1] = Xyz<float>((*this)[0].y, (*this)[1].y, (*this)[2].y);
-    t[2] = Xyz<float>((*this)[0].z, (*this)[1].z, (*this)[2].z);
-    return t;
-  }
-
-  friend std::ostream& operator<<(std::ostream& os, const Mat3x3& m) {
-    os << "[" << m[0] << std::endl
-       << " " << m[1] << std::endl
-       << " " << m[2] << "]";
-    return os;
-  }
-
-    Xyz<float>& operator[](int i) { 
-    if (i < 0 || i >= 3) throw std::out_of_range("Matrix index out of range");
-    return rows[i]; 
-  }
-
-  const Xyz<float>& operator[](int i) const { 
-    if (i < 0 || i >= 3) throw std::out_of_range("Matrix index out of range");
-    return rows[i]; 
-  }
-
-  void RotateX(float angle) {
-    const float c = cos(angle), s = sin(angle);
-    Mat3x3 rotX;
-    rotX[0] = Xyz<float>(1, 0, 0);
-    rotX[1] = Xyz<float>(0, c, -s);
-    rotX[2] = Xyz<float>(0, s, c);
-    *this = rotX * (*this);
-  }
-  void RotateY(float angle) {
-    const float c = cos(angle), s = sin(angle);
-    Mat3x3 rotY;
-    rotY[0] = Xyz<float>(c, 0, s);
-    rotY[1] = Xyz<float>(0, 1, 0);
-    rotY[2] = Xyz<float>(-s, 0, c);
-    *this = rotY * (*this);
-  }
-  void RotateZ(float angle) {
-    const float c = cos(angle), s = sin(angle);
-    Mat3x3 rotZ;
-    rotZ[0] = Xyz<float>(c, -s, 0);
-    rotZ[1] = Xyz<float>(s, c, 0);
-    rotZ[2] = Xyz<float>(0, 0, 1);
-    *this = rotZ * (*this);
-  }
-};
-
-#endif
-
-#endif  // RT_MATH_H
+#endif  // VEC_HPP_ 

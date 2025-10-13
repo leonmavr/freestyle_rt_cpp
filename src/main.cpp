@@ -1,12 +1,11 @@
 #include <iostream>
-#include "math.hpp"
+#include "vec.hpp"
+#include "mat3x3.hpp"
 
 int main (int argc, char *argv[]) {
-    Vec3f v1 = {1, 1, 0};
-    Vec3f v2 = {1, 0, 0};
-    v1.ReflectAbout(v2);
-    v2+=v1;
-    std::cout << v2.x << std::endl;
-
+    Mat3x3 mat1, mat2;
+    mat1.rows[0] = {3,2,1};
+    auto mat_t = mat1.Transpose();
+    std::cout << mat_t << std::endl;
     return 0;
 }
