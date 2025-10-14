@@ -64,13 +64,13 @@ struct Mat3x3 {
   }
 
   Xyz<float> &operator[](int i) {
-    if (i < 0 || i >= 3)
+    if (i < 0 || i >= 3) [[unlikely]]
       throw std::out_of_range("Matrix index out of range");
     return rows[i];
   }
 
   const Xyz<float> &operator[](int i) const {
-    if (i < 0 || i >= 3)
+    if (i < 0 || i >= 3) [[unlikely]]
       throw std::out_of_range("Matrix index out of range");
     return rows[i];
   }
