@@ -48,6 +48,17 @@ struct Mat3x3 {
     }
     return result;
   }
+
+  bool operator==(const Mat3x3 &other) const {
+      return (this->rows[0] == other.rows[0]) &&
+             (this->rows[1] == other.rows[1]) &&
+             (this->rows[2] == other.rows[2]);
+  }
+
+  bool operator!=(const Mat3x3 &other) const {
+      return !(*this == other);
+  }
+
   Mat3x3 Transpose() const {
     Mat3x3 t;
     t.rows[0] = Xyz<float>(rows[0][0], rows[1][0], rows[2][0]);
