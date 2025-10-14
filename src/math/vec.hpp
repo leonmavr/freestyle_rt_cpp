@@ -36,24 +36,23 @@ template <typename T> struct Xyz {
 #define VECTOR_OPS(OP)                                                 \
   template <typename U>                                                \
   auto operator OP(const Xyz<U> &other) const->                        \
-  Xyz<decltype(T {} OP U{})>                                           \
+  Xyz<decltype(T{} OP U{})>                                            \
   {                                                                    \
-    return Xyz<decltype(T {} OP U{})>(xyz[0] OP other.xyz[0],          \
-                                      xyz[1] OP other.xyz[1],          \
-                                      xyz[2] OP other.xyz[2]);         \
+    return Xyz<decltype(T{} OP U{})>(x OP other.x,                     \
+                                      y OP other.y,                    \
+                                      z OP other.z);                   \
   }                                                                    \
                                                                        \
   template <typename U> Xyz<T> &operator OP##=(const Xyz<U> &other) {  \
-    xyz[0] OP## = other.xyz[0];                                        \
-    xyz[1] OP## = other.xyz[1];                                        \
-    xyz[2] OP## = other.xyz[2];                                        \
+    x OP##= other.x;                                                   \
+    y OP##= other.y;                                                   \
+    z OP##= other.z;                                                   \
     return *this;                                                      \
   }
 
   VECTOR_OPS(+)
   VECTOR_OPS(-)
   VECTOR_OPS(*)
-  VECTOR_OPS(/)
 #undef VECTOR_OPS
   //--------------------------------------------------------------------
   // vector to scalar overloaded operator
@@ -67,9 +66,9 @@ template <typename T> struct Xyz {
                                       xyz[2] OP scalar);               \
   }                                                                    \
   template <typename U> Xyz<T> &operator OP##=(const U scalar) {       \
-    xyz[0] OP## = scalar;                                              \
-    xyz[1] OP## = scalar;                                              \
-    xyz[2] OP## = scalar;                                              \
+    x OP##= scalar;                                                    \
+    y OP##= scalar;                                                    \
+    z OP##= scalar;                                                    \
     return *this;                                                      \
   }
   SCALAR_OPS(+)
@@ -82,7 +81,7 @@ template <typename T> struct Xyz {
   //--------------------------------------------------------------------
   bool operator==(const Xyz<T> &other) const {
     if constexpr (std::is_floating_point_v<T>) {
-      constexpr T eps = static_cast<T>(1e-4);
+      constexpr T eps = static_cast<T>(1e-3);
       return (std::fabs(x - other.x) < eps) &&
              (std::fabs(y - other.y) < eps) &&
              (std::fabs(z - other.z) < eps);
@@ -127,23 +126,15 @@ template <typename T> struct Xyz {
   float NormSq() const { return x * x + y * y + z * z; }
 
   float Norm() const { return std::sqrt(NormSq()); }
-  Xyz<float> unit() const {
-    float n = Norm();
-    return Xyz<float>(x / n, y / n, z / n);
-  }
 
   Xyz<float> Unit() const {
     return Xyz<float>{x / Norm(), y / Norm(), z / Norm()};
   }
 
   float Cos(const Xyz<T> &other) const {
-    if (this != &other) [[likely]] {
-      const float n1 = Norm();
-      const float n2 = other.Norm();
-      return Dot(other) / (n1 * n2);
-    } else {
-      return 1.0;
-    }
+    if (this != &other)
+      return Dot(other) / (Norm() * other.Norm());
+    return 1.0;
   }
 
   float Angle(const Xyz<T> &other) const { return std::acos(Cos(other)); }
@@ -156,7 +147,7 @@ template <typename T> struct Xyz {
   void ReflectAbout(const Xyz<T> &axis) {
     // idea and formula from Bisqwit:
     // youtube.com/watch?v=N8elxpSu9pw&t=208s
-    const auto n = axis.unit();
+    const auto n = axis.Unit();
     double v = Dot(n);
     x = static_cast<T>(2 * v * n.x - x);
     y = static_cast<T>(2 * v * n.y - y);
