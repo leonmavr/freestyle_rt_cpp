@@ -5,10 +5,13 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <cstdint>
 
-#include "common.hpp"
 
 namespace Ppm {
+struct Rgb {
+    uint8_t r, g, b;
+};
 
 void SaveMat(const std::string &filename, const Mat<Rgb> &mat) {
   std::ofstream file(filename);

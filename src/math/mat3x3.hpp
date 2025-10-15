@@ -2,13 +2,8 @@
 #define MATH_3x3_HPP_
 
 #include "vec.hpp"
-#include <array>
-#include <cstdint>
 #include <iostream>
 
-//-----------------------------------------------------------------------
-// Matrix operations
-//-----------------------------------------------------------------------
 struct Mat3x3 {
   Xyz<float> rows[3];
 
@@ -18,11 +13,11 @@ struct Mat3x3 {
     rows[2] = Xyz<float>(0, 0, 1);
   }
 
+  // builds a rotation matrix rotating in ZYX order (Z, then Y, then X)
   Mat3x3(float anglex_rad, float angley_rad, float anglez_rad) {
     // create a rotation matrix from Euler angles
     // start with identity (default constructor)
     *this = Mat3x3();
-    // apply rotations in ZYX order (Z, then Y, then X) as a convention
     RotateZ(anglez_rad);
     RotateY(angley_rad);
     RotateX(anglex_rad);
@@ -30,34 +25,57 @@ struct Mat3x3 {
   //---------------------------------------------------------------------
   // operators
   //---------------------------------------------------------------------
+  Xyz<float> &operator[](int i) {
+    if (i < 0 || i >= 3) [[unlikely]]
+      throw std::out_of_range("Matrix index out of range");
+    return rows[i];
+  }
+
+  const Xyz<float> &operator[](int i) const {
+    if (i < 0 || i >= 3) [[unlikely]]
+      throw std::out_of_range("Matrix index out of range");
+    return rows[i];
+  }
+
   // matrix to vector multiplication
   Xyz<float> operator*(const Xyz<float> &v) const {
-    return Xyz<float>((*this)[0].Dot(v), (*this)[1].Dot(v), (*this)[2].Dot(v));
+    return Xyz<float>(rows[0].Dot(v), rows[1].Dot(v), rows[2].Dot(v));
   }
 
   Mat3x3 operator*(const Mat3x3 &other) const {
-    Mat3x3 result;
-    Mat3x3 other_t = other.Transpose(); // so we can access columns easily
-
+    Mat3x3 ret;
+    Mat3x3 other_t = other.Transpose(); // to easily access its columns
     for (int i = 0; i < 3; ++i) {
       for (int j = 0; j < 3; ++j) {
-        std::cout << rows[i] << " * " << other_t[j] << " = "
-                  << rows[i].Dot(other_t[j]) << std::endl;
-        result[i][j] = rows[i].Dot(other_t[j]);
+        // row * column product
+        ret[i][j] = rows[i].Dot(other_t[j]);
       }
     }
-    return result;
+    return ret;
+  }
+
+  Mat3x3 operator+(const Mat3x3 &other) {
+    Mat3x3 ret;
+    ret[0] = rows[0] + other.rows[0];
+    ret[0] = rows[1] + other.rows[1];
+    ret[0] = rows[2] + other.rows[2];
+    return ret;
+  }
+
+  Mat3x3 operator-(const Mat3x3 &other) {
+    Mat3x3 ret;
+    ret[0] = rows[0] - other.rows[0];
+    ret[0] = rows[1] - other.rows[1];
+    ret[0] = rows[2] - other.rows[2];
+    return ret;
   }
 
   bool operator==(const Mat3x3 &other) const {
-      return (this->rows[0] == other.rows[0]) &&
-             (this->rows[1] == other.rows[1]) &&
-             (this->rows[2] == other.rows[2]);
+    return (rows[0] == other.rows[0]) && (rows[1] == other.rows[1]) &&
+           (rows[2] == other.rows[2]);
   }
 
-  bool operator!=(const Mat3x3 &other) const {
-      return !(*this == other);
-  }
+  bool operator!=(const Mat3x3 &other) const { return !(*this == other); }
 
   Mat3x3 Transpose() const {
     Mat3x3 t;
@@ -72,18 +90,6 @@ struct Mat3x3 {
        << " " << m[1] << std::endl
        << " " << m[2] << "]";
     return os;
-  }
-
-  Xyz<float> &operator[](int i) {
-    if (i < 0 || i >= 3) [[unlikely]]
-      throw std::out_of_range("Matrix index out of range");
-    return rows[i];
-  }
-
-  const Xyz<float> &operator[](int i) const {
-    if (i < 0 || i >= 3) [[unlikely]]
-      throw std::out_of_range("Matrix index out of range");
-    return rows[i];
   }
 
   void RotateX(float angle) {
