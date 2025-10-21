@@ -4,10 +4,22 @@
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 struct Rgb {
   uint8_t r, g, b;
 };
+
+template <typename T>
+T Lerp(T from, T to, float t) { return (1 - t)*from + t*to; }
+
+// linearly map x from range [a, b] to [c, d]
+template <typename T>
+T Map(T x, T a, T b, T c, T d) {
+  if (a == b || c == d) [[unlikely]]
+    return x;
+  return c + (d - c) * (x - a) / (b - a);
+}
 
 struct Image {
   std::vector<Rgb> data;
