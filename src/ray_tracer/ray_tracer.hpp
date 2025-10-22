@@ -3,17 +3,13 @@
 
 
 #include "vec.hpp"
+#include "objects.hpp"
+#include "light.hpp"
 #include "camera.hpp"
 #include "ray.hpp"
 #include "common.hpp"
 #include <vector>
 #include <utility>
-
-struct Sphere {
-  Vec3f center; 
-  float radius;
-};
-
 
 static std::tuple<Vec3f, bool>
 Intersects(const Ray& ray, const Sphere& sphere) {
@@ -54,9 +50,10 @@ Intersects(const Ray& ray, const Sphere& sphere) {
 
 class RayTracer {
 public:
-  RayTracer(const Camera& camera) : camera_(camera),
-                                    image_(camera.width(),
-                                           camera.height()) {}
+  RayTracer(const Camera& camera, const Lights& lights) :
+    camera_(camera),
+    image_(camera.width(), camera.height()),
+    lights_(lights) {}
   // TODO: object
   void AddObject(const Sphere& object) { objects_.push_back(object); }
   Image image() const { return image_; }
@@ -71,8 +68,9 @@ public:
           if (intersects) {
             const auto w = camera_.width();
             const auto h = camera_.height();
+            auto color = lights_.ColorAt(object, where);
             image_.at(Map(y, -h/2, h/2, 0, h-1),
-                      Map(x, -w/2, w/2, 0, w-1)) = {255, 0, 0};
+                      Map(x, -w/2, w/2, 0, w-1)) = {color.x, color.y, color.z};
             // TODO: for each light source, compute the color 
           }
         }
@@ -85,6 +83,7 @@ private:
   // TODO: of objects
   std::vector<Sphere> objects_;
   Image image_;
+  const Lights& lights_;
 };
 
 

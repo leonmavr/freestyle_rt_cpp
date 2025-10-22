@@ -14,7 +14,8 @@ struct Rgb {
   uint8_t r, g, b;
 };
 
-void SaveMat(const std::string &filename, const Image &mat) {
+static void SaveAs(const Image &mat,
+                   const std::string &filename = "output.ppm") {
   std::ofstream file(filename);
   if (!file)
     throw std::runtime_error("ERROR: Could not write to file " + filename);
@@ -30,6 +31,7 @@ void SaveMat(const std::string &filename, const Image &mat) {
     }
     file << "\n";
   }
+  std::cout << "=== Image saved as " + filename + " ===" << std::endl;
 }
 
 } // namespace Ppm
