@@ -50,7 +50,7 @@ Intersects(const Ray& ray, const Sphere& sphere) {
 
 class RayTracer {
 public:
-  RayTracer(const Camera& camera, const Lights& lights) :
+  RayTracer(const Camera& camera, Lights& lights) :
     camera_(camera),
     image_(camera.width(), camera.height()),
     lights_(lights) {}
@@ -59,6 +59,7 @@ public:
   Image image() const { return image_; }
 
   void Trace() {
+    lights_.Normalize();
     for (int x = -camera_.width()/2; x < camera_.width()/2; ++x) {
       for (int y = -camera_.width()/2; y < camera_.width()/2; ++y) {
         auto point_world = camera_.Unproject(x, y);
@@ -83,7 +84,7 @@ private:
   // TODO: of objects
   std::vector<Sphere> objects_;
   Image image_;
-  const Lights& lights_;
+  Lights& lights_;
 };
 
 

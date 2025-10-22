@@ -14,9 +14,8 @@ struct Sphere : Object {
   float radius;
   // assuming it's on the sphere
   Vec3f NormalAt(const Vec3f &at) const {
-    // find the unit from sphere's origin normal to its surface and
-    // shift this vector to the surface of the sphere
-    return /*at + */ (at - center).Unit();
+    // unit vector starting at the center pointing to intersection point
+    return (at - center).Unit();
   }
 };
 
