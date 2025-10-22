@@ -6,16 +6,16 @@
 #include <iostream>
 
 int main() {
-  Camera cam(100, 80, 120, {0, 50, 400});
-  cam.Rotate(0, 0.3, 0.1);
-  std::cout << cam.width() << ", " << cam.height() << std::endl;
+  Camera cam(400, 100, 80, {0, 50, 400});
   Sphere sphere;
   sphere.center = {-200, 0, 2000};
   sphere.color = {255, 0, 0};
   sphere.radius = 500;
   Lights lights;
-  lights.AddAmbient(0.5);
-  lights.AddDir(0.5, -100, -50, -400);
+  lights.AddAmbient(0.2);
+  //lights.AddDir(0.8, -100, -50, -400);
+  lights.AddPoint(0.5, 0, 0, -400);
+  lights.AddPoint(0.5, 100, 200, 200);
   RayTracer ray_tracer(cam, lights);
   ray_tracer.AddObject(sphere);
   ray_tracer.Trace();
