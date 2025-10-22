@@ -53,7 +53,7 @@ public:
       if (light.type == LightType::AMBIENT) {
         intensity += light.intensity;
       } else {
-        Vec3f dir = (light.type == LightType::POINT) ? (at - *light.data).Unit()
+        Vec3f dir = (light.type == LightType::POINT) ? (*light.data - at).Unit()
                                                      : *light.data;
         if (sphere.NormalAt(at).Dot(dir) > 0)
           intensity += light.intensity * sphere.NormalAt(at).Dot(dir);
