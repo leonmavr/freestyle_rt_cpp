@@ -10,6 +10,8 @@
 #include "common.hpp"
 #include <vector>
 #include <utility>
+#include <limits>
+#include <algorithm>  // For std::fill
 
 static std::tuple<Vec3f, bool>
 Intersects(const Ray& ray, const Sphere& sphere) {
@@ -53,7 +55,12 @@ public:
   RayTracer(const Camera& camera, Lights& lights) :
     camera_(camera),
     image_(camera.width(), camera.height()),
-    lights_(lights) {}
+    depth_(camera.width(), camera.height()),
+    lights_(lights) {
+      // initialize depth buffer to infinity
+      std::fill(depth_.data.begin(), depth_.data.end(),
+                std::numeric_limits<double>::infinity());
+    }
   // TODO: object
   void AddObject(const Sphere& object) { objects_.push_back(object); }
   Image image() const { return image_; }
@@ -70,9 +77,14 @@ public:
             const auto w = camera_.width();
             const auto h = camera_.height();
             auto color = lights_.ColorAt(object, where);
-            image_.at(Map(y, -h/2, h/2, 0, h-1),
-                      Map(x, -w/2, w/2, 0, w-1)) = {color.x, color.y, color.z};
-            // TODO: for each light source, compute the color 
+            auto where_dist = (where - camera_.center()).Norm();
+            // image and depth buffer indexes
+            int row = Map(x, -w/2, w/2, 0, w-1);
+            int col = Map(y, -h/2, h/2, 0, h-1);
+            if (where_dist < depth_.at(row, col)) {
+              depth_.at(row, col) = where_dist;
+              image_.at(row, col) = Rgb{color.x, color.y, color.z};
+            }
           }
         }
       }
@@ -83,7 +95,10 @@ private:
   const Camera &camera_;
   // TODO: of objects
   std::vector<Sphere> objects_;
+  // image buffer to store the final colors
   Image image_;
+  // depth buffer to record the closest hit
+  Mat<float> depth_;
   Lights& lights_;
 };
 
