@@ -68,7 +68,7 @@ public:
   void Trace() {
     lights_.Normalize();
     for (int x = -camera_.width()/2; x < camera_.width()/2; ++x) {
-      for (int y = -camera_.width()/2; y < camera_.width()/2; ++y) {
+      for (int y = -camera_.height()/2; y < camera_.height()/2; ++y) {
         auto point_world = camera_.Unproject(x, y);
         Ray ray(camera_.center(), point_world);
         for (const auto &object: objects_) {

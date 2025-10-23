@@ -5,6 +5,7 @@
 #include "objects.hpp"
 #include <vector>
 #include <optional>
+#include <algorithm>
 
 enum class LightType : int {
     AMBIENT = 0,
@@ -55,8 +56,8 @@ public:
       } else {
         Vec3f dir = (light.type == LightType::POINT) ? (*light.data - at).Unit()
                                                      : *light.data;
-        if (sphere.NormalAt(at).Dot(dir) > 0)
-          intensity += light.intensity * sphere.NormalAt(at).Dot(dir);
+          intensity += light.intensity *
+                       std::max(sphere.NormalAt(at).Dot(dir), 0.0f);
       }
     }
 
