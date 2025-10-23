@@ -21,16 +21,17 @@ T Map(T x, T a, T b, T c, T d) {
   return c + (d - c) * (x - a) / (b - a);
 }
 
-struct Image {
-  std::vector<Rgb> data;
-  Image(unsigned w, unsigned h) : width(w), height(h), data(w * h) {}
+template <typename T>
+struct Mat {
+  std::vector<T> data;
+  Mat(unsigned w, unsigned h) : width(w), height(h), data(w * h) {}
 
-  Rgb& at(unsigned row, unsigned col) {
+  T& at(unsigned row, unsigned col) {
     if (row >= height || col >= width) [[unlikely]]
       throw std::out_of_range("Mat::at(row, col): index out of bounds");
     return data[row * width + col];
   }
-  const Rgb& at(unsigned row, unsigned col) const {
+  const T& at(unsigned row, unsigned col) const {
     if (row >= height || col >= width) [[unlikely]]
       throw std::out_of_range("Mat::at(row, col): index out of bounds");
     return data[row * width + col];
@@ -39,5 +40,7 @@ struct Image {
   unsigned width;
   unsigned height;
 };
+
+using Image = Mat<Rgb>;
 
 #endif  // COMMON_HPP

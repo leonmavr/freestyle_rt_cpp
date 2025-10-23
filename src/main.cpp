@@ -11,6 +11,10 @@ int main() {
   sphere.center = {-200, 0, 2000};
   sphere.color = {255, 0, 0};
   sphere.radius = 500;
+  Sphere sphere2;
+  sphere2.center = {150, 150, 1600};
+  sphere2.color = {0, 255, 0};
+  sphere2.radius = 300;
   Lights lights;
   lights.AddAmbient(0.2);
   //lights.AddDir(0.8, -100, -50, -400);
@@ -18,6 +22,7 @@ int main() {
   lights.AddPoint(0.5, 100, 200, 200);
   RayTracer ray_tracer(cam, lights);
   ray_tracer.AddObject(sphere);
+  ray_tracer.AddObject(sphere2);
   ray_tracer.Trace();
   Ppm::SaveAs(ray_tracer.image(), "output2.ppm");
 }
