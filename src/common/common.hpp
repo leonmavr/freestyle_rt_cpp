@@ -1,14 +1,9 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
-#include <cstdint>
+#include "vec.hpp"
 #include <stdexcept>
 #include <vector>
-#include <iostream>
-
-struct Rgb {
-  uint8_t r, g, b;
-};
 
 template <typename T>
 T Lerp(T from, T to, float t) { return (1 - t)*from + t*to; }
@@ -41,6 +36,6 @@ struct Mat {
   unsigned height;
 };
 
-using Image = Mat<Rgb>;
+using Image = Mat<Vec3u8>;
 
 #endif  // COMMON_HPP

@@ -10,9 +10,6 @@
 
 
 namespace Ppm {
-struct Rgb {
-  uint8_t r, g, b;
-};
 
 static void SaveAs(const Image &mat,
                    const std::string &filename = "output.ppm") {
@@ -26,8 +23,9 @@ static void SaveAs(const Image &mat,
   for (unsigned y = 0; y < mat.height; ++y) {
     for (unsigned x = 0; x < mat.width; ++x) {
       auto pixel = mat.at(y, x);
-      file << static_cast<int>(pixel.r) << " " << static_cast<int>(pixel.g)
-           << " " << static_cast<int>(pixel.b) << " ";
+      file << static_cast<int>(pixel.x) << " " <<
+              static_cast<int>(pixel.y) << " " <<
+              static_cast<int>(pixel.z) << " ";
     }
     file << "\n";
   }

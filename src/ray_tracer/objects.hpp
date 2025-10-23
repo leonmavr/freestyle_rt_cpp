@@ -20,6 +20,4 @@ struct Sphere : Object {
 };
 
 
-
-
 #endif // OBJECTS_HPP_
