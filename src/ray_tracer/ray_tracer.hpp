@@ -78,8 +78,8 @@ public:
             const auto h = camera_.height();
             auto where_dist = (where - camera_.center()).Norm();
             // image and depth buffer indexes
-            int row = Map(x, -w/2, w/2, 0, w-1);
-            int col = Map(y, -h/2, h/2, 0, h-1);
+            int col = Map(x, -w/2, w/2, 0, w-1);
+            int row = Map(y, -h/2, h/2, 0, h-1);
             if (where_dist < depth_.at(row, col)) {
               depth_.at(row, col) = where_dist;
               auto color = lights_.ColorAt(object, where, camera_);

@@ -33,7 +33,7 @@ public:
         Vec3i32{static_cast<int>(focal_length_ * point_c.x / point_c.z),
                 static_cast<int>(focal_length_ * point_c.y / point_c.z),
                 0};
-    bool is_visible = (point.z > 0) && // invisible behind the camera
+    bool is_visible = (point_c.z > 0) && // invisible behind the camera
                       (projected.x >= -plane_width_/2) &&
                       (projected.x < plane_width_/2) &&
                       (projected.y >= -plane_height_/2) &&
