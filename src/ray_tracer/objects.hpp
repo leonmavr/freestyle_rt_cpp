@@ -13,9 +13,12 @@ struct Sphere : Object {
   Vec3f center; 
   float radius;
   // assuming it's on the sphere
-  Vec3f NormalAt(const Vec3f &at) const {
-    // unit vector starting at the center pointing to intersection point
-    return (at - center).Unit();
+  Vec3f NormalAt(const Vec3f &at, bool at_origin = true) const {
+    Vec3f normal = (at - center).Unit();
+    if (at_origin)
+      return normal;
+    else
+      return at + normal * 1e-4f; // tiny bit above the intersection 
   }
 };
 

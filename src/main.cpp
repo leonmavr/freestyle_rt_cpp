@@ -7,7 +7,7 @@
 int main() {
   Camera cam(400, 100, 80, {0, 0, -200});
   Sphere sphere;
-  sphere.center = {0, 0, -2000};
+  sphere.center = {0, 0, 2000};
   sphere.color = {255, 0, 0};
   sphere.radius = 500;
   sphere.specular = 150;
