@@ -19,7 +19,7 @@ int main() {
   sphere2.center = {-600, -200, 1500};
   sphere2.color = {0, 255, 0};
   sphere2.radius = 300;
-  sphere2.specular = 1.2;
+  sphere2.specular = 5;
   
   // Blue sphere to the right, in front (will cast shadow on both)
   Sphere sphere3;
@@ -44,7 +44,7 @@ int main() {
   
   Lights lights;
   lights.AddAmbient(0.15);  // slightly brighter ambient to see shadowed areas
-  lights.AddDir(0.6, 0.1, -0.2, 0.3);  // main directional from upper left
+  lights.AddDir(0.6, 0.1, -0.2, -0.3);  // main directional from upper left
   lights.AddPoint(0.4, -800, 200, -800);  // point light from left front
   lights.AddPoint(0.3, 600, -400, -1000); // softer point light from right
   

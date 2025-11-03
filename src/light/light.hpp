@@ -64,30 +64,33 @@ public:
         continue; // ambient light isn't affected by shadows
       }
     
-      // check for shadows before computing diffuse/specular
-      bool in_shadow = IsInShadow(light, objects, sphere, at);
-      // skip diffuse/specular accumulation if in shadow
-      if (in_shadow) continue;
+      // check for shadows before computing diffuse/specular component
+      float shadow_harshness = ShadowFactor(light, objects,
+                                            sphere, at, N);
+      if (shadow_harshness < 1e-4)
+          continue; // fully occluded - save computation time
     
       // diffuse light direction 
       Vec3f dir = (light.type == LightType::POINT) 
                 ? (*light.data - at).Unit()
                 : *light.data;
     
+      // ref: 
+      // gabrielgambetta.com/computer-graphics-from-scratch/03-light.html
       float ndotl = std::max(N.Dot(dir), 0.0f);
-      diffuse_intensity += light.intensity * ndotl;
+      diffuse_intensity += light.intensity * ndotl * shadow_harshness;
       const bool normal_facing_light = ndotl > 0;
       if (sphere.specular > 0.0f && normal_facing_light) {
         Vec3f reflected = (N * 2.0f * ndotl - dir).Unit();
         float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
         specular_intensity += light.intensity *
-                              std::pow(refl_dot_view, sphere.specular);
+                              std::pow(refl_dot_view, sphere.specular) *
+                              shadow_harshness;
       }
     }
   
     diffuse_intensity = std::min(diffuse_intensity, 1.0f);
     specular_intensity = std::min(specular_intensity, 1.0f);
-  
     return Vec3u8{
       static_cast<uint8_t>(std::min(sphere.color.x * diffuse_intensity +
                                     255*specular_intensity , 255.0f)),
@@ -101,44 +104,74 @@ public:
 private:
   std::vector<Light> lights_;
 
-  static bool IsInShadow(const Light& light,
-                         const std::vector<Sphere>& objects,
-                         const Sphere& sphere,
-                         const Vec3f& at) {
-    bool in_shadow = false;
+  static float ShadowFactor(const Light& light,
+                            const std::vector<Sphere>& objects,
+                            const Sphere& sphere,
+                            const Vec3f& at,
+                            const Vec3f& normal) {
+    constexpr float EPS = 1e-2f;
+    // offset origin a little to avoid self-intersection (shadow acne)
+    Vec3f origin = at + normal * EPS;
+
     if (light.type == LightType::POINT) {
-      // shadow ray from intersection to light source
-      Ray shadow_ray(at, *light.data);
-      float light_distance = (*light.data - at).Norm();
+      // shadow ray is directed from intersection to light source
+      Ray shadow_ray(origin, *light.data);
+      float light_distance = (*light.data - origin).Norm();
       
+      float nearest_t = std::numeric_limits<float>::infinity();
+      bool any_hit = false;
       for (const auto &obj : objects) {
         // skip self-intersection
         if (&obj == &sphere) continue;
         HitRecord hit = Intersects(shadow_ray, obj);
         // check if object blocks the light (0 < t < light_distance)
         // i.e. object is between surface and the point source
-        if (hit.is_hit && hit.t > 1e-4 && hit.t < light_distance) {
-          in_shadow = true;
-          break;
+        if (hit.is_hit && hit.t > 0 && hit.t < light_distance) {
+          any_hit = true;
+          if (hit.t < nearest_t) nearest_t = hit.t;
         }
       }
+      if (!any_hit) return 1.0f; // fully visible
+
+      // shadow harshness heuristic; use (1) the distance to source 
+      // and (2) the relative direction between the normal and thei 
+      // direction to source to compute a harshness factor within [0,1]
+      Vec3f dir_to_light = (*light.data - origin).Unit();
+      // how perpendicular the ray is to the normal (2)
+      float ndotl = std::max(normal.Dot(dir_to_light), 0.0f);
+      // normalized distance from target to source
+      float u = std::clamp(nearest_t / light_distance, 0.0f, 1.0f);
+      u = 0;
+      float harshness = std::clamp(ndotl * u, 0.0f, 1.0f);
+      return harshness;
     } else if (light.type == LightType::DIRECTIONAL) {
-      Ray shadow_ray(at, {0, 0, 0});
-      // shadow ray has direction opposite to the light's
-      shadow_ray.dir = -*light.data;
+      Ray shadow_ray {origin, {0, 0, 0}};
+      // shadow ray has travels in the same direction as the light
+      shadow_ray.dir = *light.data;
       
+      float nearest_t = std::numeric_limits<float>::infinity();
+      bool any_hit = false;
       for (const auto &obj : objects) {
         if (&obj == &sphere) continue;
+        // if the shadow ray intersects another object, it casts shadow
         HitRecord hit = Intersects(shadow_ray, obj);
         // for directional lights, any hit with t > 0 means shadow
         if (hit.is_hit && hit.t > 0) {
-          in_shadow = true;
-          break;
+          any_hit = true;
+          if (hit.t < nearest_t) nearest_t = hit.t;
         }
       }
+      if (!any_hit) return 1.0f; // fully visible
+
+      // same as before, however use only part (2) of the heuristic
+      Vec3f light_dir = -*light.data;
+      float ndotl = normal.Dot(light_dir);
+      return std::clamp(ndotl, 0.0f, 1.0f);
     }
-    return in_shadow;
+    return 1.0f;
   }
+
 };
 
 #endif // LIGHT_HPP_
+
