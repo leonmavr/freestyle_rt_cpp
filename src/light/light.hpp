@@ -110,8 +110,11 @@ private:
                             const Vec3f& at,
                             const Vec3f& normal) {
     constexpr float EPS = 1e-2f;
-    // offset origin a little to avoid self-intersection (shadow acne)
+    // TODO: offset along shadow dir to avoid shadow when enclused?
+    // shift up the origin a bit - avoid self-intersection (shadow acne)
     Vec3f origin = at + normal * EPS;
+    constexpr float bright_min = 0.0, bright_max = 1.0;
+    float ret = bright_max; // no shadow
 
     if (light.type == LightType::POINT) {
       // shadow ray is directed from intersection to light source
@@ -131,44 +134,43 @@ private:
           if (hit.t < nearest_t) nearest_t = hit.t;
         }
       }
-      if (!any_hit) return 1.0f; // fully visible
+      if (!any_hit)
+        return bright_max;
 
-      // shadow harshness heuristic; use (1) the distance to source 
-      // and (2) the relative direction between the normal and thei 
-      // direction to source to compute a harshness factor within [0,1]
+      // Shadow brightness heuristic;
+      // for brightness = 1 we have no shadow, for 0 it's fully dark.
+      // Use (1) the distance to source 
+      // and (2) the relative direction between the normal and the
+      // direction to source to compute a brightness factor within [0,1]
       Vec3f dir_to_light = (*light.data - origin).Unit();
       // how perpendicular the ray is to the normal (2)
-      float ndotl = std::max(normal.Dot(dir_to_light), 0.0f);
+      float ndotl = std::clamp(normal.Dot(dir_to_light), 0.0f, 1.0f);
       // normalized distance from target to source
       float u = std::clamp(nearest_t / light_distance, 0.0f, 1.0f);
-      u = 0;
-      float harshness = std::clamp(ndotl * u, 0.0f, 1.0f);
-      return harshness;
+      ret = ndotl * u;
     } else if (light.type == LightType::DIRECTIONAL) {
       Ray shadow_ray {origin, {0, 0, 0}};
-      // shadow ray has travels in the same direction as the light
-      shadow_ray.dir = *light.data;
+      // shadow ray has travels in the opposite direction as the light
+      shadow_ray.dir = -*light.data;
       
-      float nearest_t = std::numeric_limits<float>::infinity();
-      bool any_hit = false;
-      for (const auto &obj : objects) {
-        if (&obj == &sphere) continue;
-        // if the shadow ray intersects another object, it casts shadow
-        HitRecord hit = Intersects(shadow_ray, obj);
-        // for directional lights, any hit with t > 0 means shadow
-        if (hit.is_hit && hit.t > 0) {
-          any_hit = true;
-          if (hit.t < nearest_t) nearest_t = hit.t;
-        }
-      }
-      if (!any_hit) return 1.0f; // fully visible
+      // if the shadow ray intersects another object, cast a shadow
+      // for directional lights, any hit with t > 0 means shadow
+      bool any_hit = std::any_of(objects.begin(), objects.end(),
+                     [&](const auto& obj) {
+                       auto hit = Intersects(shadow_ray, obj);
+                       return &obj != &sphere &&
+                       hit.is_hit &&
+                       hit.t > 0;
+                    });
+      if (!any_hit)
+        return bright_max;
 
+      const Vec3f light_dir = *light.data;
       // same as before, however use only part (2) of the heuristic
-      Vec3f light_dir = -*light.data;
-      float ndotl = normal.Dot(light_dir);
-      return std::clamp(ndotl, 0.0f, 1.0f);
+      float ndotl = std::clamp(normal.Dot(light_dir), 0.0f, 1.0f);
+      ret = ndotl;
     }
-    return 1.0f;
+    return std::clamp(ret, bright_min, bright_max);
   }
 
 };

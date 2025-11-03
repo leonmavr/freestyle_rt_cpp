@@ -41,6 +41,13 @@ int main() {
   sphere5.color = {200, 0, 200};
   sphere5.radius = 200;
   sphere5.specular = 20;
+
+  // Huge sphere at the bottom as a base
+  Sphere sphere6;
+  sphere6.center = {0, 4600, 2200};
+  sphere6.color = {180, 190, 200};
+  sphere6.radius = 4400;
+  sphere6.specular = 80;
   
   Lights lights;
   lights.AddAmbient(0.15);  // slightly brighter ambient to see shadowed areas
@@ -54,7 +61,8 @@ int main() {
   ray_tracer.AddObject(sphere3);
   ray_tracer.AddObject(sphere4);
   ray_tracer.AddObject(sphere5);
+  ray_tracer.AddObject(sphere6);
   
   ray_tracer.Trace();
-  Ppm::SaveAs(ray_tracer.image(), "output4.ppm");
+  Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
 }
