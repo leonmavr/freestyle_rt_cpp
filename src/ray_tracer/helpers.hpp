@@ -4,6 +4,7 @@
 #include "vec.hpp"
 #include "objects.hpp"
 #include "ray.hpp"
+#include <limits> // std::numeric_limits
 
 struct HitRecord {
     Vec3f where;
@@ -40,7 +41,7 @@ Intersects(const Ray& ray, const Sphere& sphere) {
   does_intersect |= (t1 > 0) || (t2 > 0) ;
   if (!does_intersect)
     return {where, does_intersect, 0.0};
-  float tmin = 0;
+  float tmin = std::numeric_limits<float>::infinity();
   tmin = (t1 > 0 && t2 > 0) ? std::min(t1, t2) :
          (t1 > 0 ? t1 :
          (t2 > 0 ? t2 : tmin));
