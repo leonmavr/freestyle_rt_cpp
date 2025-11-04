@@ -6,12 +6,13 @@
 #include "ray.hpp"
 #include <limits> // std::numeric_limits
 
+// simple hit record in world coordinates between a ray and an object
 struct HitRecord {
-    Vec3f where;
-    bool is_hit;
-    float t; // the ray parameter, where ray(t) = origin + direction*t
+    Vec3f where{};
+    bool is_hit{false};
+    // distance from ray origin to intersection point
+    float t{std::numeric_limits<float>::infinity()};
 };
-
 
 HitRecord 
 Intersects(const Ray& ray, const Sphere& sphere) {
@@ -31,7 +32,7 @@ Intersects(const Ray& ray, const Sphere& sphere) {
   float discriminant = b*b - 4*a*c;
   does_intersect = discriminant > 0;
   if (!does_intersect)
-    return {where, does_intersect, 0.0};
+    return HitRecord{}; // empty record - no intersection
 
   float sqrt_disc = std::sqrt(discriminant);
   float t1 = (-b - sqrt_disc) / (2 * a);
@@ -40,7 +41,7 @@ Intersects(const Ray& ray, const Sphere& sphere) {
   // nearest positive intersection - both must be in front of the ray
   does_intersect |= (t1 > 0) || (t2 > 0) ;
   if (!does_intersect)
-    return {where, does_intersect, 0.0};
+    return HitRecord{};  // empty record - no intersection
   float tmin = std::numeric_limits<float>::infinity();
   tmin = (t1 > 0 && t2 > 0) ? std::min(t1, t2) :
          (t1 > 0 ? t1 :
@@ -48,8 +49,5 @@ Intersects(const Ray& ray, const Sphere& sphere) {
   where = O + D * tmin;
   return {where, does_intersect, tmin};
 }
-
-
-
 
 #endif // HELPERS_HPP_
