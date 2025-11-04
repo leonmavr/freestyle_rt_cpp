@@ -55,7 +55,7 @@ public:
   }
 
 private:
-  TraceRecord TraceRay(const Ray& ray) {
+  TraceRecord TraceRay(const Ray& ray, int depth) {
     TraceRecord ret;
     // find nearest intersection
     for (const auto& obj : objects_) {
@@ -78,7 +78,34 @@ private:
                                 *ret.obj,
                                 ret.hit_point,
                                 camera_);
+    if (ret.obj->reflective < 1e-4f || depth <= 1) {
+      return ret;
+    }
+
+#if 0
+    // reflection ray
+    Vec3f V = -ray.dir;  // view direction (normalized)
+    Vec3f N = ret.normal;
+    Vec3f R = (N * 2.0f * N.Dot(V) - V).Unit();  // reflection direction (ensure normalized)
+    
+    // Offset origin more significantly along reflection direction
+    constexpr float OFFSET = 1e-3f;  // slightly larger offset
+    Vec3f reflection_origin = ret.hit_point + (N + R) * OFFSET;  // offset along both normal and reflection
+    Ray reflection_ray(reflection_origin, reflection_origin + R);
+
+    // Recursively trace reflected ray
+    TraceRecord reflection = TraceRay(reflection_ray, depth - 1);
+
+    // Blend direct and reflection based on material reflectivity
+    float r = ret.obj->reflective;
+    ret.color = Vec3u8{
+      static_cast<uint8_t>(ret.color.x * (1-r) + reflection.color.x * r),
+      static_cast<uint8_t>(ret.color.y * (1-r) + reflection.color.y * r),
+      static_cast<uint8_t>(ret.color.z * (1-r) + reflection.color.z * r)
+    };
+    
     return ret;
+#endif
   }
   const Camera &camera_;
   // TODO: of objects
