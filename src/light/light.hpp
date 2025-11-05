@@ -6,6 +6,7 @@
 #include "vec.hpp"
 #include "objects.hpp"
 #include "camera.hpp"
+#include "common.hpp"
 #include <vector>
 #include <optional>
 #include <algorithm>
@@ -67,21 +68,21 @@ public:
       // check for shadows before computing diffuse/specular component
       float shadow_harshness = ShadowFactor(light, objects,
                                             sphere, at, N);
-      if (shadow_harshness < 1e-4)
-          continue; // fully occluded - save computation time
+      if (shadow_harshness < eps)
+        continue; // fully occluded - save computation time
     
       // diffuse light direction 
-      Vec3f dir = (light.type == LightType::POINT) 
-                ? (*light.data - at).Unit()
-                : *light.data;
+      Vec3f light_dir = (light.type == LightType::POINT) 
+                        ? (*light.data - at).Unit()
+                        : *light.data;
     
       // ref: 
       // gabrielgambetta.com/computer-graphics-from-scratch/03-light.html
-      float ndotl = std::max(N.Dot(dir), 0.0f);
+      float ndotl = std::max(N.Dot(light_dir), 0.0f);
       diffuse_intensity += light.intensity * ndotl * shadow_harshness;
       const bool normal_facing_light = ndotl > 0;
       if (sphere.specular > 0.0f && normal_facing_light) {
-        Vec3f reflected = (N * 2.0f * ndotl - dir).Unit();
+        Vec3f reflected = light_dir.ReflectAbout(N).Unit();
         float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
         specular_intensity += light.intensity *
                               std::pow(refl_dot_view, sphere.specular) *
@@ -109,10 +110,9 @@ private:
                             const Sphere& sphere,
                             const Vec3f& at,
                             const Vec3f& normal) {
-    constexpr float EPS = 1e-2f;
     // TODO: offset along shadow dir to avoid shadow when enclused?
     // shift up the origin a bit - avoid self-intersection (shadow acne)
-    Vec3f origin = at + normal * EPS;
+    Vec3f origin = at + normal * eps;
     constexpr float bright_min = 0.0, bright_max = 1.0;
     float ret = bright_max; // no shadow
 
@@ -155,6 +155,8 @@ private:
       
       // if the shadow ray intersects another object, cast a shadow
       // for directional lights, any hit with t > 0 means shadow
+      // TODO: if we are in the interior of another object, don't count it
+      // FIXME: otherwise, false shadow when one object is immersed into another
       bool any_hit = std::any_of(objects.begin(), objects.end(),
                      [&](const auto& obj) {
                        auto hit = Intersects(shadow_ray, obj);

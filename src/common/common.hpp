@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <vector>
 
+// error tolerance
+const float eps = 1e-3f;
+
 template <typename T>
 T Lerp(T from, T to, float t) { return (1 - t)*from + t*to; }
 

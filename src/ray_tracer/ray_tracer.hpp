@@ -3,6 +3,7 @@
 
 
 #include "helpers.hpp"
+#include "common.hpp"
 #include "objects.hpp"
 #include "light.hpp"
 #include "camera.hpp"
@@ -31,14 +32,14 @@ public:
   void AddObject(const Sphere& object) { objects_.push_back(object); }
   Image image() const { return image_; }
 
-  void Trace() {
+  void Trace(int max_reflections = 3) {
     lights_.Normalize();
     for (int x = -camera_.width()/2; x < camera_.width()/2; ++x) {
       for (int y = -camera_.height()/2; y < camera_.height()/2; ++y) {
         auto point_world = camera_.Unproject(x, y);
-        Ray primary_ray(camera_.center(), point_world);
+        Ray ray(camera_.center(), point_world);
       
-        auto result = TraceRay(primary_ray);      
+        auto result = TraceRay(ray, max_reflections);      
         if (result.hit) {
           const auto w = camera_.width();
           const auto h = camera_.height();
@@ -78,34 +79,34 @@ private:
                                 *ret.obj,
                                 ret.hit_point,
                                 camera_);
-    if (ret.obj->reflective < 1e-4f || depth <= 1) {
+    if (ret.obj->reflective < eps || depth <= 1) {
       return ret;
     }
 
-#if 0
-    // reflection ray
-    Vec3f V = -ray.dir;  // view direction (normalized)
+    // to view we shoot a ray back to the ray's origin (viewer)
+    Vec3f view_dir = -ray.dir;
     Vec3f N = ret.normal;
-    Vec3f R = (N * 2.0f * N.Dot(V) - V).Unit();  // reflection direction (ensure normalized)
+    // reflect the view direction about the normal and construct a ray
+    // out of this
+    Ray refl_ray({}, {});
+    refl_ray.dir = view_dir.ReflectAbout(N).Unit();
+    // without this offset along the normal and reflection we run into
+    // self-intersection
+    auto offset =  (N + refl_ray.dir) * eps;
+    refl_ray.origin = ret.hit_point + offset;
     
-    // Offset origin more significantly along reflection direction
-    constexpr float OFFSET = 1e-3f;  // slightly larger offset
-    Vec3f reflection_origin = ret.hit_point + (N + R) * OFFSET;  // offset along both normal and reflection
-    Ray reflection_ray(reflection_origin, reflection_origin + R);
+    // recurse to compute the next or final intersection and color
+    TraceRecord reflection = TraceRay(refl_ray, depth - 1);
 
-    // Recursively trace reflected ray
-    TraceRecord reflection = TraceRay(reflection_ray, depth - 1);
-
-    // Blend direct and reflection based on material reflectivity
+    // blend direct and reflection based on material reflectivity -
+    // the higher the relfection index, the stronger the primary color
     float r = ret.obj->reflective;
     ret.color = Vec3u8{
       static_cast<uint8_t>(ret.color.x * (1-r) + reflection.color.x * r),
       static_cast<uint8_t>(ret.color.y * (1-r) + reflection.color.y * r),
       static_cast<uint8_t>(ret.color.z * (1-r) + reflection.color.z * r)
     };
-    
     return ret;
-#endif
   }
   const Camera &camera_;
   // TODO: of objects
