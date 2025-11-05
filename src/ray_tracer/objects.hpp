@@ -4,21 +4,17 @@
 #include "vec.hpp"
 
 struct Object {
-  Vec3u8 color;
-  float specular;        // specular = 10 -> matte, specular = 100 -> shiny
-  float reflective;      // 0 -> non reflective, 1 -> mirror
+  Vec3u8 color{50, 235, 220};
+  float specular{20}; // specular = 10 -> matte, specular = 100 -> shiny
+  float reflective{0}; // 0 -> non reflective, 1 -> mirror
 };
 
 struct Sphere : Object {
   Vec3f center; 
   float radius;
   // assuming it's on the sphere
-  Vec3f NormalAt(const Vec3f &at, bool at_origin = true) const {
-    Vec3f normal = (at - center).Unit();
-    if (at_origin)
-      return normal;
-    else
-      return at + normal * 1e-4f; // tiny bit above the intersection 
+  Vec3f NormalAt(const Vec3f &at) const {
+    return (at - center).Unit();
   }
 };
 

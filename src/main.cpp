@@ -13,6 +13,7 @@ int main() {
   sphere1.color = {255, 0, 0};
   sphere1.radius = 500;
   sphere1.specular = 150;
+  sphere1.reflective = 0.7f;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
   Sphere sphere2;
@@ -24,9 +25,10 @@ int main() {
   // Blue sphere to the right, in front (will cast shadow on both)
   Sphere sphere3;
   sphere3.center = {500, 100, 1200};
-  sphere3.color = {0, 100, 255};
+  //sphere3.color = {0, 100, 255};
   sphere3.radius = 250;
   sphere3.specular = 20;
+  sphere3.reflective = 0.3f;
   
   // Small yellow sphere upper left, very forward (small shadow caster)
   Sphere sphere4;
