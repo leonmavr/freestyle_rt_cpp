@@ -155,14 +155,18 @@ private:
       
       // if the shadow ray intersects another object, cast a shadow
       // for directional lights, any hit with t > 0 means shadow
-      // TODO: if we are in the interior of another object, don't count it
-      // FIXME: otherwise, false shadow when one object is immersed into another
       bool any_hit = std::any_of(objects.begin(), objects.end(),
                      [&](const auto& obj) {
+                       if (&obj == &sphere) return false;
                        auto hit = Intersects(shadow_ray, obj);
-                       return &obj != &sphere &&
-                       hit.is_hit &&
-                       hit.t > 0;
+                       if (!(hit.is_hit && hit.t > 0)) return false;
+                       // normal of the other object at intersection
+                       Vec3f n_other = obj.NormalAt(hit.where);
+                       // occlusion - one object is inside another
+                       bool occluded = normal.Dot(shadow_ray.dir) < 0.0f &&
+                          n_other.Dot(shadow_ray.dir) < 0.0f; 
+                       if (occluded) return false;
+                       return true;
                     });
       if (!any_hit)
         return bright_max;
@@ -178,4 +182,3 @@ private:
 };
 
 #endif // LIGHT_HPP_
-
