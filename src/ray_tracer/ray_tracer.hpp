@@ -1,7 +1,6 @@
 #ifndef RAY_TRACER_HPP_
 #define RAY_TRACER_HPP_
 
-
 #include "helpers.hpp"
 #include "common.hpp"
 #include "objects.hpp"
@@ -32,7 +31,7 @@ public:
   void AddObject(const Sphere& object) { objects_.push_back(object); }
   Image image() const { return image_; }
 
-  void Trace(int max_reflections = 3) {
+  void Trace(int max_reflections = 5) {
     lights_.Normalize();
     for (int x = -camera_.width()/2; x < camera_.width()/2; ++x) {
       for (int y = -camera_.height()/2; y < camera_.height()/2; ++y) {
@@ -49,7 +48,6 @@ public:
           // assuming one ray per pixel -
           // else we need a depth buffer for the closest hit
           image_.at(row, col) = result.color;
-
         }
       }
     }
@@ -62,7 +60,7 @@ private:
     for (const auto& obj : objects_) {
       auto hit = Intersects(ray, obj);
       // reject hits that are behind the ray's origin
-      if (!hit.is_hit || hit.t <= 0.0f) continue;
+      if (!hit.is_hit || hit.t <= 0) continue;
     
       if (hit.t < ret.t) {
         ret.t = hit.t;
@@ -92,7 +90,7 @@ private:
     refl_ray.dir = view_dir.ReflectAbout(N).Unit();
     // without this offset along the normal and reflection we run into
     // self-intersection
-    auto offset =  (N + refl_ray.dir) * eps;
+    auto offset = (N + refl_ray.dir) * eps;
     refl_ray.origin = ret.hit_point + offset;
     
     // recurse to compute the next or final intersection and color
@@ -100,7 +98,8 @@ private:
 
     // blend direct and reflection based on material reflectivity -
     // the higher the relfection index, the stronger the primary color
-    float r = ret.obj->reflective;
+    // linear map to preserve original color, Fresnel (linear) blend
+    float r = Map(ret.obj->reflective, 0.0f, 1.0f, 0.05f, 0.95f);
     ret.color = Vec3u8{
       static_cast<uint8_t>(ret.color.x * (1-r) + reflection.color.x * r),
       static_cast<uint8_t>(ret.color.y * (1-r) + reflection.color.y * r),
@@ -109,7 +108,6 @@ private:
     return ret;
   }
   const Camera &camera_;
-  // TODO: of objects
   std::vector<Sphere> objects_;
   // image buffer to store the final colors
   Image image_;

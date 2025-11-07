@@ -21,6 +21,7 @@ int main() {
   sphere2.color = {0, 255, 0};
   sphere2.radius = 300;
   sphere2.specular = 5;
+  sphere2.reflective = 0.25;
   
   // Blue sphere to the right, in front (will cast shadow on both)
   Sphere sphere3;
@@ -43,6 +44,7 @@ int main() {
   sphere5.color = {200, 0, 200};
   sphere5.radius = 200;
   sphere5.specular = 20;
+  sphere5.reflective = 0.9;
 
   // Huge sphere at the bottom as a base
   Sphere sphere6;
