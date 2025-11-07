@@ -72,41 +72,37 @@ private:
     }
     if (!ret.hit)
       return ret; // background color and no hit
-    // combine lighting from all sources
-    ret.color = lights_.ColorAt(objects_, 
-                                *ret.obj,
-                                ret.hit_point,
-                                camera_);
-    if (ret.obj->reflective < eps || depth <= 1) {
+    // direct lighting at this hit
+    Vec3u8 direct = lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
+
+    if (depth <= 1 || ret.obj->reflective <= eps) {
+      ret.color = direct;
       return ret;
     }
 
-    // to view we shoot a ray back to the ray's origin (viewer)
+    // viewer direction; shoot the ray back to the viewer
     Vec3f view_dir = -ray.dir;
     Vec3f N = ret.normal;
-    // reflect the view direction about the normal and construct a ray
-    // out of this
-    Ray refl_ray({}, {});
-    refl_ray.dir = view_dir.ReflectAbout(N).Unit();
-    // without this offset along the normal and reflection we run into
-    // self-intersection
-    auto offset = (N + refl_ray.dir) * eps;
-    refl_ray.origin = ret.hit_point + offset;
-    
-    // recurse to compute the next or final intersection and color
-    TraceRecord reflection = TraceRay(refl_ray, depth - 1);
+    Ray child_ray({}, {});
+    child_ray.dir = view_dir.ReflectAbout(N).Unit();
+    // child ray origin: push outward slighly above the hemisphere
+    Vec3f hemi_normal = (N.Dot(child_ray.dir) > 0 ? N : -N);
+    // without this offset, the child ray runs into self-intersection
+    auto offset = (hemi_normal + view_dir) * eps * 4; // eps * n to reduce acne
+    child_ray.origin = ret.hit_point + offset;
 
-    // blend direct and reflection based on material reflectivity -
-    // the higher the relfection index, the stronger the primary color
-    // linear map to preserve original color, Fresnel (linear) blend
+    TraceRecord child = TraceRay(child_ray, depth - 1);
+
+    // linear (Fresnel) blending of direct color and reflection
     float r = Map(ret.obj->reflective, 0.0f, 1.0f, 0.05f, 0.95f);
     ret.color = Vec3u8{
-      static_cast<uint8_t>(ret.color.x * (1-r) + reflection.color.x * r),
-      static_cast<uint8_t>(ret.color.y * (1-r) + reflection.color.y * r),
-      static_cast<uint8_t>(ret.color.z * (1-r) + reflection.color.z * r)
+      static_cast<uint8_t>(direct.x * (1 - r) + child.color.x * r),
+      static_cast<uint8_t>(direct.y * (1 - r) + child.color.y * r),
+      static_cast<uint8_t>(direct.z * (1 - r) + child.color.z * r)
     };
     return ret;
   }
+
   const Camera &camera_;
   std::vector<Sphere> objects_;
   // image buffer to store the final colors

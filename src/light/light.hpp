@@ -129,8 +129,8 @@ private:
                             const Sphere& sphere,
                             const Vec3f& at,
                             const Vec3f& normal) {
-    // shift up the origin a bit - avoid self-intersection (shadow acne)
-    Vec3f origin = at + (normal - at) * eps;
+    // shift up the origin a bit - avoid self-intersection (shadow acne)                      
+    Vec3f origin = at + (normal - at) * eps * 4.0f; // eps * n to kill speckles
     constexpr float bright_min = 0.0, bright_max = 1.0;
     float ret = bright_max; // no shadow
     /*
@@ -151,6 +151,10 @@ private:
      */
     if (light.type == LightType::POINT) {
       // shadow ray is directed from intersection to light source
+      Vec3f dir_to_light = (*light.data - at).Unit();
+      // push origin along the normal hemisphere w.r.t. light direction
+      Vec3f hemi = (normal.Dot(dir_to_light) > 0 ? normal : -normal);
+      origin = at + hemi * eps * 4.0f;
       Ray shadow_ray(origin, *light.data);
       float light_dist = (*light.data - origin).Norm();
       
@@ -175,13 +179,16 @@ private:
       // Use (1) the distance to source 
       // and (2) the relative direction between the normal and the
       // direction to source to compute a brightness factor within [0,1]
-      Vec3f dir_to_light = (*light.data - origin).Unit();
+      dir_to_light = (*light.data - origin).Unit();
       // how perpendicular the ray is to the normal (2)
       float ndotl = normal.Dot(dir_to_light);
       // normalized distance from target to source
       float u = std::clamp(t_nearest / light_dist, 0.0f, 1.0f);
       ret = ndotl * u;
     } else if (light.type == LightType::DIRECTIONAL) {
+      // push origin along the normal hemisphere w.r.t. light direction
+      Vec3f hemi = (normal.Dot(*light.data) > 0 ? normal : -normal);
+      origin = at + hemi * eps * 4.0f;
       Ray shadow_ray {origin, {}};
       // shadow ray has travels in the opposite direction as the light
       shadow_ray.dir = -*light.data;
