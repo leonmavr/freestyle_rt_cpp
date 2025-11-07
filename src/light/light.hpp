@@ -66,11 +66,28 @@ public:
       }
     
       // check for shadows before computing diffuse/specular component
-      float shadow_harshness = ShadowFactor(light, objects,
-                                            sphere, at, N);
-      if (shadow_harshness < eps)
+      float shadow_brightness = ShadowFactor(light, objects,
+                                             sphere, at, N);
+      if (shadow_brightness < eps)
         continue; // fully occluded - save computation time
     
+      /*
+       * D ___\___              D: directional source     
+       *      \___\___          P: point source
+       *          \___\___      N: normal      
+       *              \___\___              ^N
+       *                  \____\___        / 
+       *                       \___\___    | 
+       *   _______                 \___\__/   *****         
+       * P __     \_____________       \__*************     
+       *     \___               \_______*****************   
+       *         \___                  *******************  
+       *             \__              ********************* 
+       *                \___          ********************* 
+       *                    \___     ***********************
+       *                        \___  ********************* 
+       *                            \_********************* 
+       */
       // diffuse light direction 
       Vec3f light_dir = (light.type == LightType::POINT) 
                         ? (*light.data - at).Unit()
@@ -79,14 +96,16 @@ public:
       // ref: 
       // gabrielgambetta.com/computer-graphics-from-scratch/03-light.html
       float ndotl = std::max(N.Dot(light_dir), 0.0f);
-      diffuse_intensity += light.intensity * ndotl * shadow_harshness;
-      const bool normal_facing_light = ndotl > 0;
-      if (sphere.specular > 0.0f && normal_facing_light) {
-        Vec3f reflected = light_dir.ReflectAbout(N).Unit();
-        float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
-        specular_intensity += light.intensity *
-                              std::pow(refl_dot_view, sphere.specular) *
-                              shadow_harshness;
+      const bool normal_facing_light = N.Dot(light_dir) > 0;
+      if (normal_facing_light) {
+        diffuse_intensity += light.intensity * ndotl * shadow_brightness;
+        if (sphere.specular > 0) {
+          Vec3f reflected = light_dir.ReflectAbout(N).Unit();
+          float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
+          specular_intensity += light.intensity *
+                                std::pow(refl_dot_view, sphere.specular) *
+                                shadow_brightness;
+        }
       }
     }
   
@@ -110,18 +129,32 @@ private:
                             const Sphere& sphere,
                             const Vec3f& at,
                             const Vec3f& normal) {
-    // TODO: offset along shadow dir to avoid shadow when enclused?
     // shift up the origin a bit - avoid self-intersection (shadow acne)
-    Vec3f origin = at + normal * eps;
+    Vec3f origin = at + (normal - at) * eps;
     constexpr float bright_min = 0.0, bright_max = 1.0;
     float ret = bright_max; // no shadow
-
+    /*
+     *  X: intersection                    To determine whether
+     *                       dir. source   a shdaow is cast:
+     *             original   /            1. reverse the direction/
+     *             ray      -/                point to source and start
+     *              ***** -V                  from intersection
+     *            *********                2. If it hits another object
+     *            *********                   AND there is no occlusion
+     *            *********                   cast a shadow, i.e. do not
+     *              *****                     count contribution from
+     *         orig.  |^  shadow              this source
+     *         ray    //  ray
+     *              v/  
+     *           ***X*******       
+     *        *****************    
+     */
     if (light.type == LightType::POINT) {
       // shadow ray is directed from intersection to light source
       Ray shadow_ray(origin, *light.data);
-      float light_distance = (*light.data - origin).Norm();
+      float light_dist = (*light.data - origin).Norm();
       
-      float nearest_t = std::numeric_limits<float>::infinity();
+      float t_nearest = std::numeric_limits<float>::infinity();
       bool any_hit = false;
       for (const auto &obj : objects) {
         // skip self-intersection
@@ -129,9 +162,9 @@ private:
         HitRecord hit = Intersects(shadow_ray, obj);
         // check if object blocks the light (0 < t < light_distance)
         // i.e. object is between surface and the point source
-        if (hit.is_hit && hit.t > 0 && hit.t < light_distance) {
+        if (hit.is_hit && hit.t > 0 && hit.t < light_dist) {
           any_hit = true;
-          if (hit.t < nearest_t) nearest_t = hit.t;
+          if (hit.t < t_nearest) t_nearest = hit.t;
         }
       }
       if (!any_hit)
@@ -144,12 +177,12 @@ private:
       // direction to source to compute a brightness factor within [0,1]
       Vec3f dir_to_light = (*light.data - origin).Unit();
       // how perpendicular the ray is to the normal (2)
-      float ndotl = std::clamp(normal.Dot(dir_to_light), 0.0f, 1.0f);
+      float ndotl = normal.Dot(dir_to_light);
       // normalized distance from target to source
-      float u = std::clamp(nearest_t / light_distance, 0.0f, 1.0f);
+      float u = std::clamp(t_nearest / light_dist, 0.0f, 1.0f);
       ret = ndotl * u;
     } else if (light.type == LightType::DIRECTIONAL) {
-      Ray shadow_ray {origin, {0, 0, 0}};
+      Ray shadow_ray {origin, {}};
       // shadow ray has travels in the opposite direction as the light
       shadow_ray.dir = -*light.data;
       
@@ -159,12 +192,12 @@ private:
                      [&](const auto& obj) {
                        if (&obj == &sphere) return false;
                        auto hit = Intersects(shadow_ray, obj);
-                       if (!(hit.is_hit && hit.t > 0)) return false;
+                       if (!hit.is_hit || hit.t <= 0) return false;
                        // normal of the other object at intersection
                        Vec3f n_other = obj.NormalAt(hit.where);
                        // occlusion - one object is inside another
-                       bool occluded = normal.Dot(shadow_ray.dir) < 0.0f &&
-                          n_other.Dot(shadow_ray.dir) < 0.0f; 
+                       bool occluded = normal.Dot(shadow_ray.dir) < 0 &&
+                         n_other.Dot(shadow_ray.dir) < 0; 
                        if (occluded) return false;
                        return true;
                     });
