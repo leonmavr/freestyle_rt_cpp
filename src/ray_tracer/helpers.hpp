@@ -4,15 +4,14 @@
 #include "vec.hpp"
 #include "objects.hpp"
 #include "ray.hpp"
-#include "common.hpp" // eps
 #include <limits> // std::numeric_limits
 
 // simple hit record in world coordinates between a ray and an object
 struct HitRecord {
-    Vec3f where{};
-    bool is_hit{false};
-    // distance from ray origin to intersection point
-    float t{std::numeric_limits<float>::infinity()};
+  Vec3f where{};
+  bool is_hit{false};
+  // distance from ray origin to intersection point
+  float t{std::numeric_limits<float>::infinity()};
 };
 
 HitRecord 

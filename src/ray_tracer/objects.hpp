@@ -5,8 +5,11 @@
 
 struct Object {
   Vec3u8 color{50, 235, 220};
-  float specular{20}; // specular = 10 -> matte, specular = 100 -> shiny
-  float reflective{0}; // 0 -> non reflective, 1 -> mirror
+  float specular{20};    // 10 -> matte, 100 -> shiny
+  float reflective{0};   // 0 -> non reflective, 1 -> mirror
+  float transparency{0}; // how much light transmitted through it 0 to 1
+  // how much the material refracts light - 1 not at all, > 1 more
+  float refractive{1};
 };
 
 struct Sphere : Object {
