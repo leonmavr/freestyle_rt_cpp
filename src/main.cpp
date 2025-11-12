@@ -14,6 +14,7 @@ int main() {
   sphere1.radius = 500;
   sphere1.specular = 150;
   sphere1.reflective = 0.7f;
+  sphere1.transparency = 0.7;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
   Sphere sphere2;
@@ -30,13 +31,17 @@ int main() {
   sphere3.radius = 250;
   sphere3.specular = 20;
   sphere3.reflective = 0.3f;
+  sphere3.transparency = 0.5;
   
   // Small yellow sphere upper left, very forward (small shadow caster)
   Sphere sphere4;
   sphere4.center = {-300, 400, 1000};
   sphere4.color = {255, 255, 0};
   sphere4.radius = 150;
-  sphere4.specular = 5;
+  sphere4.specular = 20;
+  sphere4.reflective = 0.6f;
+  sphere4.transparency = 0.8f;
+  sphere4.refractive_index = 1.4f;
   
   // Purple sphere lower right, mid-distance
   Sphere sphere5;
@@ -44,7 +49,9 @@ int main() {
   sphere5.color = {200, 0, 200};
   sphere5.radius = 200;
   sphere5.specular = 20;
-  sphere5.reflective = 0.9;
+  sphere5.reflective = 0.4;
+  sphere5.transparency = 0.7f;     // mostly transparent
+  sphere5.refractive_index = 1.5f; // glass
 
   // Huge sphere at the bottom as a base
   Sphere sphere6;
@@ -52,10 +59,12 @@ int main() {
   sphere6.color = {180, 190, 200};
   sphere6.radius = 4400;
   sphere6.specular = 80;
+
+
   
   Lights lights;
   lights.AddAmbient(0.15);  // slightly brighter ambient to see shadowed areas
-  lights.AddDir(0.6, 0.1, -0.2, -0.3);  // main directional from upper left
+  lights.AddDir(0.6, -0.1, -0.2, 0.3);  // main directional from upper left
   lights.AddPoint(0.4, -800, 200, -800);  // point light from left front
   lights.AddPoint(0.3, 600, -400, -1000); // softer point light from right
   
@@ -67,6 +76,6 @@ int main() {
   ray_tracer.AddObject(sphere5);
   ray_tracer.AddObject(sphere6);
   
-  ray_tracer.Trace();
+  ray_tracer.Trace(8);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
 }
