@@ -9,7 +9,8 @@ struct Object {
   float reflective{0};   // 0 -> non reflective, 1 -> mirror
   float transparency{0}; // how much light transmitted through it 0 to 1
   // how much the material refracts light - 1 not at all, > 1 more
-  float refractive{1};
+  float refractive_index{1};
+  float tint{0.1f};      // color tint for refraction (0 to 0.5)
 };
 
 struct Sphere : Object {

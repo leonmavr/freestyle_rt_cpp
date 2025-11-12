@@ -4,6 +4,7 @@
 #include "vec.hpp"
 #include "objects.hpp"
 #include "ray.hpp"
+#include "common.hpp" // eps
 #include <limits> // std::numeric_limits
 
 // simple hit record in world coordinates between a ray and an object
@@ -39,13 +40,13 @@ Intersects(const Ray& ray, const Sphere& sphere) {
   float t2 = (-b + sqrt_disc) / (2 * a);
 
   // nearest positive intersection - both must be in front of the ray
-  does_intersect |= (t1 > 0) || (t2 > 0);
+  does_intersect |= (t1 > eps) || (t2 > eps) ;
   if (!does_intersect)
     return HitRecord{};  // empty record - no intersection
   float tmin = std::numeric_limits<float>::infinity();
-  tmin = (t1 > 0 && t2 > 0) ? std::min(t1, t2) :
-         (t1 > 0 ? t1 :
-         (t2 > 0 ? t2 : tmin));
+  tmin = (t1 > eps && t2 > eps) ? std::min(t1, t2) :
+         (t1 > eps ? t1 :
+         (t2 > eps ? t2 : tmin));
   where = O + D * tmin;
   return {where, does_intersect, tmin};
 }
