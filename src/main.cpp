@@ -5,7 +5,7 @@
 #include "vec.hpp"
 
 int main() {
-  Camera cam(400, 100, 80, {0, 0, -200});
+  Camera cam(400, 100, 80, {0, 0, -200}, {0.2, -0.2, 0.4});
   
   // Large red sphere in the center back
   Sphere sphere1;
@@ -15,6 +15,7 @@ int main() {
   sphere1.specular = 150;
   sphere1.reflective = 0.7f;
   sphere1.transparency = 0.7;
+  sphere1.tint = 0.4f;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
   Sphere sphere2;

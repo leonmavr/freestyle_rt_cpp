@@ -5,6 +5,7 @@
 #include "vec.hpp"
 #include <cmath> // M_PI
 #include <utility>
+#include <array>
 
 
 // pinhole camera model
@@ -48,6 +49,28 @@ public:
     Vec3f p_cam{plane_x, plane_y, focal_length_};
     Mat3x3 R_inv = rot_.Transpose(); // inverse = transpose in this case
     return center_ + R_inv * p_cam;
+  }
+
+  // the 4 corners of the image (camera) plane in world coords
+  std::array<Vec3f, 4> CornersWorld() const {
+    float hw = static_cast<float>(plane_width_) / 2.0f;
+    float hh = static_cast<float>(plane_height_) / 2.0f;
+    Vec3f tl = Unproject(-hw, -hh); // y=-hh => top
+    Vec3f tr = Unproject( hw, -hh);
+    Vec3f bl = Unproject(-hw,  hh);
+    Vec3f br = Unproject( hw,  hh);
+    return {tl, tr, bl, br};
+  }
+
+  // axis-aligned bounding box of the current image plane corners in world space
+  std::pair<Vec3f, Vec3f> AABBWorld() const {
+    auto c = CornersWorld();
+    Vec3f mn = c[0], mx = c[0];
+    for (const auto &p : c) {
+      mn.x = std::min(mn.x, p.x); mn.y = std::min(mn.y, p.y); mn.z = std::min(mn.z, p.z);
+      mx.x = std::max(mx.x, p.x); mx.y = std::max(mx.y, p.y); mx.z = std::max(mx.z, p.z);
+    }
+    return {mn, mx};
   }
 
   void Translate(Vec3f dxdydz) { center_ += dxdydz; } 

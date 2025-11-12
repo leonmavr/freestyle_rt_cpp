@@ -33,19 +33,26 @@ public:
 
   void Trace(int max_reflections = 5) {
     lights_.Normalize();
-    for (int x = -camera_.width()/2; x < camera_.width()/2; ++x) {
-      for (int y = -camera_.height()/2; y < camera_.height()/2; ++y) {
-        auto point_world = camera_.Unproject(x, y);
+    // current camera plane corners (world-space)
+    auto corners = camera_.CornersWorld();
+    // local camera axes in world space for rasterization
+    Vec3f tl = corners[0];
+    Vec3f tr = corners[1];
+    Vec3f bl = corners[2];
+    // horizontal (u) and vertical (v) world span vectors
+    Vec3f span_h = tr - tl;
+    Vec3f span_v = bl - tl;
+    int w = camera_.width();
+    int h = camera_.height();
+    for (int col = 0; col < w; ++col) {
+      float u = static_cast<float>(col) / static_cast<float>(w - 1);
+      for (int row = 0; row < h; ++row) {
+        float v = static_cast<float>(row) / static_cast<float>(h - 1);
+        // bilinear point on the (possibly rotated) image plane
+        Vec3f point_world = tl + span_h * u + span_v * v;
         Ray ray(camera_.center(), point_world);
-        auto result = TraceRay(ray, max_reflections);      
+        auto result = TraceRay(ray, max_reflections);
         if (result.hit) {
-          const auto w = camera_.width();
-          const auto h = camera_.height();
-          // map from camera plane to image coords
-          int col = Map(x, -w/2, w/2, 0, w-1);
-          int row = Map(y, -h/2, h/2, 0, h-1);
-          // assuming one ray per pixel -
-          // else we need a depth buffer for the closest hit
           image_.at(row, col) = result.color;
         }
       }
