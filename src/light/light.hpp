@@ -99,11 +99,11 @@ public:
       const bool normal_facing_light = N.Dot(light_dir) > 0;
       if (normal_facing_light) {
         diffuse_intensity += light.intensity * ndotl * shadow_brightness;
-        if (sphere.specular > 0) {
+        if (sphere.material.specular > 0) {
           Vec3f reflected = light_dir.ReflectAbout(N).Unit();
           float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
           specular_intensity += light.intensity *
-                                std::pow(refl_dot_view, sphere.specular) *
+                                std::pow(refl_dot_view, sphere.material.specular) *
                                 shadow_brightness;
         }
       }
@@ -111,12 +111,15 @@ public:
   
     diffuse_intensity = std::min(diffuse_intensity, 1.0f);
     specular_intensity = std::min(specular_intensity, 1.0f);
+    uint8_t r = sphere.material.color.x;
+    uint8_t g = sphere.material.color.y;
+    uint8_t b = sphere.material.color.z;
     return Vec3u8{
-      static_cast<uint8_t>(std::min(sphere.color.x * diffuse_intensity +
+      static_cast<uint8_t>(std::min(r * diffuse_intensity +
                                     255*specular_intensity , 255.0f)),
-      static_cast<uint8_t>(std::min(sphere.color.y * diffuse_intensity +
+      static_cast<uint8_t>(std::min(g * diffuse_intensity +
                                     255*specular_intensity , 255.0f)),
-      static_cast<uint8_t>(std::min(sphere.color.z * diffuse_intensity +
+      static_cast<uint8_t>(std::min(b * diffuse_intensity +
                                     255*specular_intensity , 255.0f)),
     };
   }

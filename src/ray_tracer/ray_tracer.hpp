@@ -82,7 +82,7 @@ private:
       if (&other == self) continue;
       Vec3f pc = probe - other.center;
       if (pc.Dot(pc) < other.radius * other.radius) {
-        ior = other.refractive_index;
+        ior = other.material.refractive_index;
       }
     }
     return ior;
@@ -98,7 +98,7 @@ private:
     OrientationInfo ret;
     ret.entering = N.Dot(I) < 0.0f;
     ret.N_oriented = ret.entering ? N : -N;
-    float n_obj = obj->refractive_index;
+    float n_obj = obj->material.refractive_index;
     ret.n1 = ret.entering ? SurroundingIOR(hit_point, obj, N) : ior_current;
     ret.n2 = ret.entering ? n_obj : SurroundingIOR(hit_point, obj, -N);
     ret.eta = ret.n1 / ret.n2;
@@ -132,7 +132,7 @@ private:
     if (!ret.hit)
       return ret; // background color and no hit
 
-    float trans = std::clamp(ret.obj->transparency, 0.0f, 1.0f);
+    float trans = std::clamp(ret.obj->material.transparency, 0.0f, 1.0f);
     // Direct lighting (surface shading) due diffusion/specular, based
     // on the object's color. Highly transparent objects (>0.5)
     // suppress it so they don't paint themselves.
@@ -140,9 +140,7 @@ private:
                   ? Vec3u8{0,0,0}
                   : lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
 
-    float refl = std::clamp(ret.obj->reflective, 0.0f, 1.0f);
-    // index of refraction of the hit object
-    float ior_next = ret.obj->refractive_index;
+    float refl = std::clamp(ret.obj->material.reflective, 0.0f, 1.0f);
 
     // final ray bounce or nothing to reflect/refract
     if (depth <= 1 || (refl < eps && trans < eps)) {
@@ -198,13 +196,13 @@ private:
       // -----> child ray (2): refract in the next medium
       refr_color = TraceRay(refr_ray, depth - 1, n2).color;
       // tint heuristic (weight) to paint transparent objects
-      float tint_w = ret.obj->tint * trans;
+      float tint_w = ret.obj->material.tint * trans;
       auto ApplyTint = [&](uint8_t col_next, uint8_t color_curr)->uint8_t{
         float curr_norm = static_cast<float>(color_curr) / 255.0f;
         float w = (1.0f - tint_w) + tint_w * curr_norm;
         return static_cast<uint8_t>(std::min(255.0f, col_next * w));
       };
-      auto color_current = ret.obj->color;
+      auto color_current = ret.obj->material.color;
       refr_color = Vec3u8{
         ApplyTint(refr_color.x, color_current.x),
         ApplyTint(refr_color.y, color_current.y),
