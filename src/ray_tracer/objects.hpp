@@ -3,7 +3,7 @@
 
 #include "vec.hpp"
 
-struct Object {
+struct Material {
   Vec3u8 color{50, 235, 220};
   float specular{20};    // 10 -> matte, 100 -> shiny
   float reflective{0};   // 0 -> non reflective, 1 -> mirror
@@ -13,8 +13,13 @@ struct Object {
   float tint{0.1f};      // color tint for refraction (0 to 0.5)
 };
 
+struct Object {
+  virtual Vec3f NormalAt(const Vec3f &at) const = 0;
+  Vec3f center;
+  Material material;
+};
+
 struct Sphere : Object {
-  Vec3f center; 
   float radius;
   // assuming it's on the sphere
   Vec3f NormalAt(const Vec3f &at) const {
