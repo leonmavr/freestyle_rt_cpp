@@ -2,7 +2,6 @@
 #define LIGHT_HPP_
 
 #include "ray.hpp"
-#include "helpers.hpp"
 #include "vec.hpp"
 #include "objects.hpp"
 #include "camera.hpp"
@@ -42,14 +41,15 @@ public:
                             .data = Vec3f{dirx, diry, dirz}.Unit()});
   }
 
-  // call it having added all lights to weigh their intensities
+  // call it having added all lights to normalize their intensities
   void Normalize() {
     float total = 0.0;
     for (const auto &light: lights_) total += light.intensity;
-    if (std::abs(total) < 0.001) return;
+    if (std::abs(total) < eps) return;
     for (auto &light: lights_) light.intensity /= total;
   }
 
+  // diffuse and specular light contribution at a point on an object
   Vec3u8 ColorAt(const std::vector<Sphere>& objects,
                  const Sphere &sphere,
                  const Vec3f &at,
@@ -132,8 +132,9 @@ private:
                             const Sphere& sphere,
                             const Vec3f& at,
                             const Vec3f& normal) {
-    // shift up the origin a bit - avoid self-intersection (shadow acne)                      
-    Vec3f origin = at + (normal - at) * eps * 4.0f; // eps * n to kill speckles
+    // shift up the origin a bit to avoid self-intersection
+    // (shadow acne) and multiply by eps * n to kill speckles          
+    Vec3f origin = at + (normal - at) * eps * 4.0f; 
     constexpr float bright_min = 0.0, bright_max = 1.0;
     float ret = bright_max; // no shadow
     /*
@@ -166,12 +167,13 @@ private:
       for (const auto &obj : objects) {
         // skip self-intersection
         if (&obj == &sphere) continue;
-        HitRecord hit = Intersects(shadow_ray, obj);
+        HitRecord hit = obj.Intersects(shadow_ray);
         // check if object blocks the light (0 < t < light_distance)
         // i.e. object is between surface and the point source
         if (hit.is_hit && hit.t > 0 && hit.t < light_dist) {
           any_hit = true;
-          if (hit.t < t_nearest) t_nearest = hit.t;
+          if (hit.t < t_nearest)
+            t_nearest = hit.t;
         }
       }
       if (!any_hit)
@@ -201,7 +203,7 @@ private:
       bool any_hit = std::any_of(objects.begin(), objects.end(),
                      [&](const auto& obj) {
                        if (&obj == &sphere) return false;
-                       auto hit = Intersects(shadow_ray, obj);
+                       auto hit = obj.Intersects(shadow_ray);
                        if (!hit.is_hit || hit.t <= 0) return false;
                        // normal of the other object at intersection
                        Vec3f n_other = obj.NormalAt(hit.where);
@@ -216,12 +218,10 @@ private:
 
       const Vec3f light_dir = *light.data;
       // same as before, however use only part (2) of the heuristic
-      float ndotl = std::clamp(normal.Dot(light_dir), 0.0f, 1.0f);
-      ret = ndotl;
+      ret = std::clamp(normal.Dot(light_dir), 0.0f, 1.0f);
     }
     return std::clamp(ret, bright_min, bright_max);
   }
-
 };
 
 #endif // LIGHT_HPP_

@@ -1,7 +1,6 @@
 #ifndef RAY_TRACER_HPP_
 #define RAY_TRACER_HPP_
 
-#include "helpers.hpp"
 #include "common.hpp"
 #include "objects.hpp"
 #include "light.hpp"
@@ -45,6 +44,7 @@ public:
     int w = camera_.width();
     int h = camera_.height();
     for (int col = 0; col < w; ++col) {
+      // normalized column coordinate
       float u = static_cast<float>(col) / static_cast<float>(w - 1);
       for (int row = 0; row < h; ++row) {
         float v = static_cast<float>(row) / static_cast<float>(h - 1);
@@ -52,9 +52,8 @@ public:
         Vec3f point_world = tl + span_h * u + span_v * v;
         Ray ray(camera_.center(), point_world);
         auto result = TraceRay(ray, max_reflections);
-        if (result.hit) {
+        if (result.hit)
           image_.at(row, col) = result.color;
-        }
       }
     }
   }
@@ -72,20 +71,18 @@ private:
   };
 
   // probe the refractive index of the surrounding medium slightly off the surface
-  // TODO: only works for spheres
-  float SurroundingIOR(const Vec3f& p,
+  float SurroundingIOR(const Vec3f& where,
                        const Sphere* self,
                        const Vec3f& outward_normal) const {
-    Vec3f probe = p + outward_normal * eps * 4.0f;
-    float ior = 1.0f; // default is air
+    Vec3f probe = where + outward_normal * eps * 4.0f;
+    float ret = 1.0f; // default is air
     for (const auto& other : objects_) {
       if (&other == self) continue;
-      Vec3f pc = probe - other.center;
-      if (pc.Dot(pc) < other.radius * other.radius) {
-        ior = other.material.refractive_index;
+      if (other.IsInside(probe)) {
+        ret = other.material.refractive_index;
       }
     }
-    return ior;
+    return ret;
   }
 
   // determine normal orientation and the IOR (index of refraction)
@@ -117,7 +114,7 @@ private:
     TraceRecord ret;
     // find nearest intersection
     for (const auto& obj : objects_) {
-      auto hit = Intersects(ray, obj);
+      auto hit = obj.Intersects(ray);
       // reject hits that are behind the ray's origin
       if (!hit.is_hit || hit.t <= 0) continue;
     
@@ -171,6 +168,7 @@ private:
     Vec3f hemi_refl = N_oriented.Dot(ray_refl.dir) > 0 ?
                       N_oriented :
                       -N_oriented;
+
     // slightly push reflection off the surface to avoid self-intersection
     ray_refl.origin = ret.hit_point + hemi_refl * eps * 4.0f;
     //  -----> child ray (1): reflect for this medium
@@ -178,9 +176,9 @@ private:
 
     // k := 1 - eta^2 * (1 - cos_i^2) < 0 => total internal reflection
     float k = 1.0f - eta * eta * (1.0f - cos_i * cos_i);
-    
     float trans_weight = trans * (1.0f - R_fresnel);
     float refl_weight = refl + R_fresnel * trans;
+
     bool tir = k < 0.0f;
     //----------------------------------------------------------------
     // refract child ray or do TIR
