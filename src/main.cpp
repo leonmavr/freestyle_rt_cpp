@@ -13,8 +13,8 @@ int main() {
   sphere1.material.color = {255, 0, 0};
   sphere1.radius = 500;
   sphere1.material.specular = 150;
-  sphere1.material.reflective = 0.7f;
-  sphere1.material.transparency = 0.7;
+  sphere1.material.reflective = 0.5;
+  sphere1.material.transparency = 0.3;
   sphere1.material.tint = 0.4f;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
@@ -56,9 +56,9 @@ int main() {
 
   // Huge sphere at the bottom as a base
   Sphere sphere6;
-  sphere6.center = {0, 4600, 2200};
+  sphere6.center = {0, 3600, 2200};
   sphere6.material.color = {180, 190, 200};
-  sphere6.radius = 4400;
+  sphere6.radius = 3000;
   sphere6.material.specular = 80;
 
 
