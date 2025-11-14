@@ -11,11 +11,11 @@ int main() {
   Sphere sphere1;
   sphere1.center = {0, 0, 2000};
   sphere1.material.color = {255, 0, 0};
-  sphere1.radius = 500;
+  sphere1.radius = 400;
   sphere1.material.specular = 150;
-  sphere1.material.reflective = 0.3;
-  sphere1.material.transparency = 0.1;
-  sphere1.material.tint = 0.4f;
+  sphere1.material.reflective = 0.7;
+  sphere1.material.transparency = 0;
+  sphere1.material.tint = 0.1f;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
   Sphere sphere2;

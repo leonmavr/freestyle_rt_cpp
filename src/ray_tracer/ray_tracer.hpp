@@ -140,8 +140,10 @@ private:
     float refl = std::clamp(ret.obj->material.reflective, 0.0f, 1.0f);
     // if this hit is the immediate back-face of the object we just entered
     // via refraction, suppress reflection once to avoid the double glint effect 
-    if (self_reflect && ret.obj == self_reflect)
+    if (self_reflect && ret.obj == self_reflect) {
       refl = 0.0f;
+      std::cout << "---\n";
+    }
 
     // final ray bounce or nothing to reflect/refract
     if (depth <= 1 || (refl < eps && trans < eps)) {
@@ -182,7 +184,7 @@ private:
     ray_refl.dir = refl_dir;
 #endif
     // -----> child ray (1): reflect for this medium
-    Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1, ret.obj).color;
+    Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
 
     // k := 1 - eta^2 * (1 - cos_i^2) < 0 => total internal reflection
     float k = 1.0f - eta * eta * (1.0f - cos_i * cos_i);
