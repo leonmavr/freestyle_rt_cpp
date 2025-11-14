@@ -110,7 +110,7 @@ private:
     return r0 + (1.0f - r0) * std::pow(1.0f - cos_i, 5.0f);
   }
 
-  TraceRecord TraceRay(const Ray& ray, int depth, float ior_current = 1.0f) {
+  TraceRecord TraceRay(const Ray& ray, int depth, float ior_current = 1.0f, const Sphere* self_reflect = nullptr) {
     TraceRecord ret;
     // find nearest intersection
     for (const auto& obj : objects_) {
@@ -138,6 +138,10 @@ private:
                   : lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
 
     float refl = std::clamp(ret.obj->material.reflective, 0.0f, 1.0f);
+    // if this hit is the immediate back-face of the object we just entered
+    // via refraction, suppress reflection once to avoid the double glint effect 
+    if (self_reflect && ret.obj == self_reflect)
+      refl = 0.0f;
 
     // final ray bounce or nothing to reflect/refract
     if (depth <= 1 || (refl < eps && trans < eps)) {
@@ -161,8 +165,7 @@ private:
     // Schlick reflectance approximation for refraction/reflection
     //----------------------------------------------------------------
     float R_fresnel = Schlick(n1, n2, cos_i);
-
-    Ray ray_refl({}, {});
+#if 0
     ray_refl.dir = I.ReflectAbout(N_oriented).Unit();
     // make sure reflection is towards the incident plane
     Vec3f hemi_refl = N_oriented.Dot(ray_refl.dir) > 0 ?
@@ -171,8 +174,15 @@ private:
 
     // slightly push reflection off the surface to avoid self-intersection
     ray_refl.origin = ret.hit_point + hemi_refl * eps * 4.0f;
-    //  -----> child ray (1): reflect for this medium
-    Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
+#else
+    Vec3f N_reflect = N_oriented; // already facing opposite incident I
+    Vec3f refl_dir = (I - N_reflect * (2.0f * I.Dot(N_reflect))).Unit();
+    Ray ray_refl(ret.hit_point + N_reflect * eps * 4.0f,
+                 ret.hit_point + (N_reflect + refl_dir) * eps * 4.0f);
+    ray_refl.dir = refl_dir;
+#endif
+    // -----> child ray (1): reflect for this medium
+    Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1, ret.obj).color;
 
     // k := 1 - eta^2 * (1 - cos_i^2) < 0 => total internal reflection
     float k = 1.0f - eta * eta * (1.0f - cos_i * cos_i);
@@ -191,8 +201,11 @@ private:
       refr_ray.dir = (I * eta +
                       N_oriented * (eta * cos_i - cos_t)).Unit();
       refr_ray.origin = ret.hit_point + refr_ray.dir * eps * 4.0f;
+      // suppress reflection on the immediate back-face of the same object
       // -----> child ray (2): refract in the next medium
-      refr_color = TraceRay(refr_ray, depth - 1, n2).color;
+      refr_color = TraceRay(refr_ray, depth - 1, n2, ret.obj).color;
+      //refr_color = {255, 0 ,0};
+      //refr_color = TraceRay(refr_ray, depth - 1, n2).color;
       // tint heuristic (weight) to paint transparent objects
       float tint_w = ret.obj->material.tint * trans;
       auto ApplyTint = [&](uint8_t col_next, uint8_t color_curr)->uint8_t{
