@@ -13,8 +13,8 @@ int main() {
   sphere1.material.color = {255, 0, 0};
   sphere1.radius = 500;
   sphere1.material.specular = 150;
-  sphere1.material.reflective = 0.5;
-  sphere1.material.transparency = 0.3;
+  sphere1.material.reflective = 0.3;
+  sphere1.material.transparency = 0.1;
   sphere1.material.tint = 0.4f;
   
   // Green sphere to the left, slightly forward (will cast shadow on red)
@@ -36,13 +36,14 @@ int main() {
   
   // Small yellow sphere upper left, very forward (small shadow caster)
   Sphere sphere4;
-  sphere4.center = {-300, 400, 1000};
+  sphere4.center = {-300, 400, 2000};
   sphere4.material.color = {255, 255, 0};
-  sphere4.radius = 150;
+  sphere4.radius = 250;
   sphere4.material.specular = 20;
-  sphere4.material.reflective = 0.6f;
-  sphere4.material.transparency = 0.8f;
+  sphere4.material.reflective = 0.7f;
+  sphere4.material.transparency = 0.4f;
   sphere4.material.refractive_index = 1.4f;
+  sphere4.material.tint = 0.3;
   
   // Purple sphere lower right, mid-distance
   Sphere sphere5;
@@ -56,18 +57,20 @@ int main() {
 
   // Huge sphere at the bottom as a base
   Sphere sphere6;
-  sphere6.center = {0, 3600, 2200};
+  sphere6.center = {0, 4400, 2200};
   sphere6.material.color = {180, 190, 200};
-  sphere6.radius = 3000;
+  sphere6.radius = 3200;
   sphere6.material.specular = 80;
 
 
   
   Lights lights;
-  lights.AddAmbient(0.15);  // slightly brighter ambient to see shadowed areas
+  lights.AddAmbient(0.65);  // slightly brighter ambient to see shadowed areas
   lights.AddDir(0.6, -0.1, -0.2, 0.3);  // main directional from upper left
   lights.AddPoint(0.4, -800, 200, -800);  // point light from left front
   lights.AddPoint(0.3, 600, -400, -1000); // softer point light from right
+  lights.AddPoint(0.3, -200, 400, 1000); // softer point light from right
+  lights.AddDir(0.6, 0.3, -0.1, -0.3);  // main directional from upper left
   
   RayTracer ray_tracer(cam, lights);
   ray_tracer.AddObject(sphere1);
@@ -77,6 +80,6 @@ int main() {
   ray_tracer.AddObject(sphere5);
   ray_tracer.AddObject(sphere6);
   
-  ray_tracer.Trace(8);
+  ray_tracer.Trace(5);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
 }
