@@ -136,15 +136,14 @@ template <typename T> struct Xyz {
                   x * other.y - y * other.x);
   }
 
-  Xyz<T> ReflectAbout(const Xyz<T> &axis) {
-    // idea and formula from Bisqwit:
-    // youtube.com/watch?v=N8elxpSu9pw&t=208s
+  Xyz<T> ReflectAbout(const Xyz<T> &axis) const {
+    // reflect the vector about the given axis (treated as normal)
     const auto n = axis.Unit();
     double v = Dot(n);
     return Xyz<T>{
-      static_cast<T>(2 * v * n.x - x),
-      static_cast<T>(2 * v * n.y - y),
-      static_cast<T>(2 * v * n.z - z)};
+      static_cast<T>(x - 2 * v * n.x),
+      static_cast<T>(y - 2 * v * n.y),
+      static_cast<T>(z - 2 * v * n.z)};
   }
 };
 
