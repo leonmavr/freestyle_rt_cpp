@@ -186,9 +186,9 @@ private:
     //------------------------------------------------------------------
     // refraction 
     //------------------------------------------------------------------
-    // Schlick Fresnel
+    // Fresnel blending via Schlik approximation for the weights
     float R_fresnel = Schlick(n1, n2, cos_i);
-    // prepare refraction
+    // (1 - R) * trans = fraction that got trasnmitted
     float trans_weight = mat_trans * (1.0f - R_fresnel);
     // R * trans = fraction that got reflected instead of refracted
     float refl_weight = mat_refl + R_fresnel * mat_trans;
