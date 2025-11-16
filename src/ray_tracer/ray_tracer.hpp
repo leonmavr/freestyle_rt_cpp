@@ -115,6 +115,7 @@ private:
           const Vec3f &N,        /* normal at intersection */
           float eta,             /* relative refr index n1/n2 */
           float cosi             /* cos of incident ray */) const {
+    //cosi = -N.Dot(incident);
     float k = 1.0f - eta * eta * (1.0f - cosi * cosi);
     if (k < 0.0f) return {true, {}}; // TIR
     float cost = std::sqrt(std::max(0.0f, k));
@@ -156,10 +157,14 @@ private:
                                 0.0f, 1.0f);
 
     // direct lighting (surface shading) from diffuse and specular light
-    Vec3u8 direct = (mat_trans > 0.5f) ? Vec3u8{0,0,0} :
-                    lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
+    Vec3u8 direct = lights_.ColorAt(objects_, *ret.obj, ret.hit_point,
+                                    camera_);
+    // transparency reduces the brightness
+    direct.x *= (1 - mat_trans);
+    direct.y *= (1 - mat_trans);
+    direct.z *= (1 - mat_trans);
 
-    // no need for more ray bounces (base base), only direct ligting 
+    // no need for more ray bounces (base case), only direct ligting 
     if (depth <= 0 || (mat_refl < eps && mat_trans < eps)) {
       ret.color = direct;
       return ret;
