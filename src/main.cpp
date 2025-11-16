@@ -43,7 +43,7 @@ int main() {
   sphere4.material.reflective = 0.7f;
   sphere4.material.transparency = 0.4f;
   sphere4.material.refractive_index = 1.4f;
-  sphere4.material.tint = 0.3;
+  sphere4.material.tint = 0.1;
   
   // Purple sphere lower right, mid-distance
   Sphere sphere5;

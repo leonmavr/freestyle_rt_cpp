@@ -15,7 +15,7 @@ struct TraceRecord {
   Vec3u8 color{0, 0, 0};      // final color
   bool hit{false};        
   float t{std::numeric_limits<float>::infinity()}; // hit distance
-  Vec3f hit_point{};       
+  Vec3f hit_point{};          // where the hit occured
   Vec3f normal{};             // surface normal at hit
   const Sphere* obj{nullptr}; // hit object (nullptr if no hit)
 };
@@ -63,14 +63,16 @@ private:
   // for refraction calculations
   struct OrientationInfo {
     bool entering{true};
-    Vec3f N_oriented{};
+    // oriented normal, i.e. pointing away from refracted medium
+    Vec3f normal{};
     float n1{1.0f};
     float n2{1.0f};
     float eta{1.0f};
     float cos_i{0.0f};
   };
 
-  // probe the refractive index of the surrounding medium slightly off the surface
+  // probe the refractive index of the surrounding medium slightly off
+  // the surface
   float SurroundingIOR(const Vec3f& where,
                        const Sphere* self,
                        const Vec3f& outward_normal) const {
@@ -88,20 +90,40 @@ private:
   // determine normal orientation and the IOR (index of refraction)
   // pair, given that the normal ray should point towadds the incident
   // plane
-  OrientationInfo ComputeOrientation(const Vec3f& N, const Vec3f& I,
-                                     const Vec3f& hit_point,
-                                     const Sphere* obj,
-                                     float ior_current) const {
+  OrientationInfo RayOrientation(const TraceRecord& record, 
+                                 const Vec3f& I,
+                                 float ior_current) const {
     OrientationInfo ret;
-    ret.entering = N.Dot(I) < 0.0f;
-    ret.N_oriented = ret.entering ? N : -N;
-    float n_obj = obj->material.refractive_index;
-    ret.n1 = ret.entering ? SurroundingIOR(hit_point, obj, N) : ior_current;
-    ret.n2 = ret.entering ? n_obj : SurroundingIOR(hit_point, obj, -N);
+    ret.entering = record.normal.Dot(I) < 0;
+    // normal; pointing away from  the refracted medium
+    ret.normal = ret.entering ? record.normal : -record.normal;
+    float n_obj = record.obj->material.refractive_index;
+    float n_surrounding = SurroundingIOR(record.hit_point,
+                                         record.obj,
+                                         record.normal);
+    ret.n1 = ret.entering ? n_surrounding : ior_current;
+    ret.n2 = ret.entering ? n_obj : SurroundingIOR(record.hit_point,
+                                                   record.obj,
+                                                   -record.normal);
     ret.eta = ret.n1 / ret.n2;
-    ret.cos_i = -ret.N_oriented.Dot(I);
+    ret.cos_i = -ret.normal.Dot(I);
     return ret;
   }
+
+  // returns refracted vector (Snell's vectorized law) and whether TIR
+  // occused
+  std::pair<bool, Vec3f>
+  Refract(const Vec3f &incident, /* incident ray direction */
+          const Vec3f &N,        /* normal at intersection */
+          float eta,             /* relative refr index n1/n2 */
+          float cosi             /* cos of incident ray */) const {
+    float k = 1.0f - eta * eta * (1.0f - cosi * cosi);
+    if (k < 0.0f) return {true, {}}; // TIR
+    float cost = std::sqrt(std::max(0.0f, k));
+    // formula for trasnmitted (refracted) ray
+    Vec3f trans = (incident * eta + N * (eta * cosi - cost)).Unit();
+    return {false, trans};
+  };
 
   // Schlick's approximation of Fresnel reflectance
   float Schlick(float n1, float n2, float cos_i) const {
@@ -110,7 +132,7 @@ private:
     return r0 + (1.0f - r0) * std::pow(1.0f - cos_i, 5.0f);
   }
 
-  TraceRecord TraceRay(const Ray& ray, int depth, float ior_current = 1.0f, const Sphere* self_reflect = nullptr) {
+  TraceRecord TraceRay(const Ray& ray, int depth, float ior_current = 1.0f) const {
     TraceRecord ret;
     // find nearest intersection
     for (const auto& obj : objects_) {
@@ -129,109 +151,81 @@ private:
     if (!ret.hit)
       return ret; // background color and no hit
 
-    float trans = std::clamp(ret.obj->material.transparency, 0.0f, 1.0f);
-    // Direct lighting (surface shading) due diffusion/specular, based
-    // on the object's color. Highly transparent objects (>0.5)
-    // suppress it so they don't paint themselves.
-    Vec3u8 direct = (trans > 0.5f)
-                  ? Vec3u8{0,0,0}
-                  : lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
+    // material parameters
+    float mat_trans = std::clamp(ret.obj->material.transparency,
+                                 0.0f, 1.0f);
+    float mat_refl = std::clamp(ret.obj->material.reflective,
+                                0.0f, 1.0f);
 
-    float refl = std::clamp(ret.obj->material.reflective, 0.0f, 1.0f);
-    // if this hit is the immediate back-face of the object we just entered
-    // via refraction, suppress reflection once to avoid the double glint effect 
-    if (self_reflect && ret.obj == self_reflect) {
-      refl = 0.0f;
-      std::cout << "---\n";
-    }
+    // direct lighting (surface shading) from diffuse and specular light
+    Vec3u8 direct = (mat_trans > 0.5f) ? Vec3u8{0,0,0} :
+                    lights_.ColorAt(objects_, *ret.obj, ret.hit_point, camera_);
 
-    // final ray bounce or nothing to reflect/refract
-    if (depth <= 1 || (refl < eps && trans < eps)) {
+    // no need for more ray bounces (base base), only direct ligting 
+    if (depth <= 0 || (mat_refl < eps && mat_trans < eps)) {
       ret.color = direct;
       return ret;
     }
 
-    //----------------------------------------------------------------
-    // Orient the normal and determine n1, n2 for refraction
-    //----------------------------------------------------------------
-    Vec3f N = ret.normal;
-    // incident (pointing away from origin toward surface)
-    Vec3f I = ray.dir; 
-
-    // Determine oriented normal and IORs for refraction
-    auto ori = ComputeOrientation(N, I, ret.hit_point, ret.obj, ior_current);
-    Vec3f N_oriented = ori.N_oriented;
+    // incident (pointing away from origin, against the normal)
+    Vec3f inc = ray.dir; 
+    auto ori = RayOrientation(ret, inc, ior_current);
+    // cos_i refers to the angle between normal and incident
     float n1 = ori.n1, n2 = ori.n2, eta = ori.eta, cos_i = ori.cos_i;
-   
-    //----------------------------------------------------------------
-    // Schlick reflectance approximation for refraction/reflection
-    //----------------------------------------------------------------
-    float R_fresnel = Schlick(n1, n2, cos_i);
-#if 0
-    ray_refl.dir = I.ReflectAbout(N_oriented).Unit();
-    // make sure reflection is towards the incident plane
-    Vec3f hemi_refl = N_oriented.Dot(ray_refl.dir) > 0 ?
-                      N_oriented :
-                      -N_oriented;
 
-    // slightly push reflection off the surface to avoid self-intersection
-    ray_refl.origin = ret.hit_point + hemi_refl * eps * 4.0f;
-#else
-    Vec3f N_reflect = N_oriented; // already facing opposite incident I
-    Vec3f refl_dir = (I - N_reflect * (2.0f * I.Dot(N_reflect))).Unit();
-    Ray ray_refl(ret.hit_point + N_reflect * eps * 4.0f,
-                 ret.hit_point + (N_reflect + refl_dir) * eps * 4.0f);
-    ray_refl.dir = refl_dir;
-#endif
-    // -----> child ray (1): reflect for this medium
+    //------------------------------------------------------------------
+    // reflection
+    //------------------------------------------------------------------
+    Ray ray_refl{{}, {}};
+    ray_refl.dir = inc.ReflectAbout(ori.normal);
+    // offset slightly along the normal to avoid self-intersection
+    ray_refl.origin = ret.hit_point + ori.normal * eps * 4.0f;
+    // -----> child ray (1): reflection
     Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
 
-    // k := 1 - eta^2 * (1 - cos_i^2) < 0 => total internal reflection
-    float k = 1.0f - eta * eta * (1.0f - cos_i * cos_i);
-    float trans_weight = trans * (1.0f - R_fresnel);
-    float refl_weight = refl + R_fresnel * trans;
-
-    bool tir = k < 0.0f;
-    //----------------------------------------------------------------
-    // refract child ray or do TIR
-    //----------------------------------------------------------------
-    Vec3u8 refr_color{0, 0, 0};
-    if (!tir && trans > eps) {
-      float cos_t = std::sqrt(std::max(0.0f, k));
-      // vectorized Snell's law for refraction
-      Ray refr_ray({}, {});
-      refr_ray.dir = (I * eta +
-                      N_oriented * (eta * cos_i - cos_t)).Unit();
-      refr_ray.origin = ret.hit_point + refr_ray.dir * eps * 4.0f;
-      // suppress reflection on the immediate back-face of the same object
-      // -----> child ray (2): refract in the next medium
-      refr_color = TraceRay(refr_ray, depth - 1, n2, ret.obj).color;
-      //refr_color = {255, 0 ,0};
-      //refr_color = TraceRay(refr_ray, depth - 1, n2).color;
-      // tint heuristic (weight) to paint transparent objects
-      float tint_w = ret.obj->material.tint * trans;
-      auto ApplyTint = [&](uint8_t col_next, uint8_t color_curr)->uint8_t{
-        float curr_norm = static_cast<float>(color_curr) / 255.0f;
-        float w = (1.0f - tint_w) + tint_w * curr_norm;
-        return static_cast<uint8_t>(std::min(255.0f, col_next * w));
-      };
-      auto color_current = ret.obj->material.color;
-      refr_color = Vec3u8{
-        ApplyTint(refr_color.x, color_current.x),
-        ApplyTint(refr_color.y, color_current.y),
-        ApplyTint(refr_color.z, color_current.z)
-      };
-    } else if (tir) {
-      // all energy goes to reflection if TIR
-      trans_weight = 0.0f;
-      refl_weight = std::min(1.0f, refl_weight + trans);
+    //------------------------------------------------------------------
+    // refraction 
+    //------------------------------------------------------------------
+    // Schlick Fresnel
+    float R_fresnel = Schlick(n1, n2, cos_i);
+    // prepare refraction
+    float trans_weight = mat_trans * (1.0f - R_fresnel);
+    // R * trans = fraction that got reflected instead of refracted
+    float refl_weight = mat_refl + R_fresnel * mat_trans;
+    bool tir = false;
+    Vec3u8 refr_color{0, 0,0};
+    if (mat_trans > eps) {
+      auto [is_tir, refr_dir] = Refract(inc, ori.normal, eta, cos_i);
+      tir = is_tir;
+      if (!tir) {
+        Ray refr_ray{{}, {}};
+        refr_ray.origin = ret.hit_point + refr_dir * eps * 4.0f;
+        refr_ray.dir = refr_dir;
+        // -----> child ray (2): refraction
+        refr_color = TraceRay(refr_ray, depth - 1, n2).color;
+        // tint heuristic: w = (1 - tint_w) + tint_w * (color / 255)
+        float tint_w = ret.obj->material.tint * mat_trans;
+        auto ApplyTint = [&](uint8_t col_next,
+                             uint8_t color_curr)->uint8_t{
+          float curr_norm = static_cast<float>(color_curr) / 255.0f;
+          float w = (1.0f - tint_w) + tint_w * curr_norm;
+          return static_cast<uint8_t>(std::min(255.0f, col_next * w));
+        };
+        auto color_current = ret.obj->material.color;
+        refr_color = Vec3u8{
+          ApplyTint(refr_color.x, color_current.x),
+          ApplyTint(refr_color.y, color_current.y),
+          ApplyTint(refr_color.z, color_current.z)
+        };
+      } else {
+        // total internal reflection:
+        // send transparency energy into reflection
+        trans_weight = 0.0f;
+        refl_weight = std::min(1.0f, refl_weight + mat_trans);
+      }
     }
 
-    //----------------------------------------------------------------
-    // blend direct, reflected and refracted colors
-    //----------------------------------------------------------------
     float total = refl_weight + trans_weight;
-    // direct component gets the leftover energy
     float w_direct = 1.0f - std::min(total, 1.0f);
     ret.color = Vec3u8{
       static_cast<uint8_t>(direct.x * w_direct +
