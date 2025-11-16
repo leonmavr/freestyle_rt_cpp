@@ -101,10 +101,8 @@ private:
     float n_surrounding = SurroundingIOR(record.hit_point,
                                          record.obj,
                                          record.normal);
-    ret.n1 = ret.entering ? n_surrounding : ior_current;
-    ret.n2 = ret.entering ? n_obj : SurroundingIOR(record.hit_point,
-                                                   record.obj,
-                                                   -record.normal);
+    ret.n1 = !ret.entering ? n_surrounding : ior_current;
+    ret.n2 = !ret.entering ? n_obj : ior_current;
     ret.eta = ret.n1 / ret.n2;
     ret.cos_i = -ret.normal.Dot(I);
     return ret;

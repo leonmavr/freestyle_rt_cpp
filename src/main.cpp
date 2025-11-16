@@ -5,7 +5,7 @@
 #include "vec.hpp"
 
 int main() {
-  Camera cam(400, 100, 80, {100, 200, -500}, {0.2, 0.2, 0.4});
+  Camera cam(400, 100, 80, {100, 200, -500}, {-0.2, 0.2, 0.4});
   
   // Large red sphere in the center back
   Sphere sphere1;
