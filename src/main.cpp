@@ -5,7 +5,7 @@
 #include "vec.hpp"
 
 int main() {
-  Camera cam(400, 100, 80, {0, 0, -200}, {0.2, -0.2, 0.4});
+  Camera cam(400, 100, 80, {100, 200, -500}, {0.2, 0.2, 0.4});
   
   // Large red sphere in the center back
   Sphere sphere1;
@@ -27,12 +27,14 @@ int main() {
   
   // Blue sphere to the right, in front (will cast shadow on both)
   Sphere sphere3;
-  sphere3.center = {500, 100, 1200};
+  sphere3.center = {160, 190, 500};
   //sphere3.material.color = {0, 100, 255};
-  sphere3.radius = 250;
+  sphere3.radius = 100;
   sphere3.material.specular = 20;
   sphere3.material.reflective = 0.3f;
   sphere3.material.transparency = 0.5;
+  sphere3.material.refractive_index = 1.3f; // water-like
+  sphere3.material.tint = 0.2f;
   
   // Small yellow sphere upper left, very forward (small shadow caster)
   Sphere sphere4;
@@ -57,13 +59,11 @@ int main() {
 
   // Huge sphere at the bottom as a base
   Sphere sphere6;
-  sphere6.center = {0, 4400, 2200};
+  sphere6.center = {0, 0, 4800};
   sphere6.material.color = {180, 190, 200};
-  sphere6.radius = 3200;
+  sphere6.radius = 1800;
   sphere6.material.specular = 80;
 
-
-  
   Lights lights;
   lights.AddAmbient(0.65);  // slightly brighter ambient to see shadowed areas
   lights.AddDir(0.6, -0.1, -0.2, 0.3);  // main directional from upper left
