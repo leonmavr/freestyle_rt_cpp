@@ -27,15 +27,12 @@ public:
     camera_(camera),
     image_(camera.width(), camera.height()),
     lights_(lights) {}
-    // variadic template - T for type, Args for c/tor arguments
-    template <typename T, typename... Args>
-    requires std::derived_from<T, Object>
-    void AddObject(Args&&... args) {
-      // or forward to avoid copies: std::forward<Args>(args)...
-      auto obj = std::make_unique<T>((args)...);
-      objects_.push_back(std::move(obj));
-    }
-  Image image() const { return image_; }
+  template <typename T>
+  void AddObject(T&& obj) {
+    // with std::forward to preserve rvalue/lvalue nature
+    objects_.push_back(std::make_unique<T>(std::forward<T>(obj)));
+  }
+  const Image& image() { return image_; }
 
   void Trace(int max_reflections = 5) {
     lights_.Normalize();

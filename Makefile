@@ -21,7 +21,7 @@ OBJ_DIR  := build
 INCDIRS  := $(shell find $(SRC_DIR) -type d 2>/dev/null || true)
 INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 
-CXXFLAGS := $(INCLUDES) $(SDL_CFLAGS) -O3 -std=c++20 -Wall -Wextra -MMD -MP
+CXXFLAGS := $(INCLUDES) $(SDL_CFLAGS) -O3 -std=c++17 -Wall -Wextra -MMD -MP
 LDFLAGS  := -lm
 LDLIBS   :=
 
