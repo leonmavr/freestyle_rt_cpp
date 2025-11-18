@@ -7,6 +7,7 @@
 #include "camera.hpp"
 #include "common.hpp"
 #include <vector>
+#include <memory>
 #include <optional>
 #include <algorithm>
 
@@ -50,8 +51,8 @@ public:
   }
 
   // diffuse and specular light contribution at a point on an object
-  Vec3u8 ColorAt(const std::vector<Sphere>& objects,
-                 const Sphere &sphere,
+  Vec3u8 ColorAt(const std::vector<std::unique_ptr<Object>>& objects,
+                 const Object &sphere,
                  const Vec3f &at,
                  const Camera &camera) const {
     float diffuse_intensity = 0.0;
@@ -67,7 +68,7 @@ public:
     
       // check for shadows before computing diffuse/specular component
       float shadow_brightness = ShadowFactor(light, objects,
-                                             sphere, at, N);
+                     sphere, at, N);
       if (shadow_brightness < eps)
         continue; // fully occluded - save computation time
     
@@ -128,8 +129,8 @@ private:
   std::vector<Light> lights_;
 
   static float ShadowFactor(const Light& light,
-                            const std::vector<Sphere>& objects,
-                            const Sphere& sphere,
+                            const std::vector<std::unique_ptr<Object>>& objects,
+                            const Object& sphere,
                             const Vec3f& at,
                             const Vec3f& normal) {
     // shift up the origin a bit to avoid self-intersection
@@ -166,8 +167,8 @@ private:
       bool any_hit = false;
       for (const auto &obj : objects) {
         // skip self-intersection
-        if (&obj == &sphere) continue;
-        HitRecord hit = obj.Intersects(shadow_ray);
+        if (obj.get() == &sphere) continue;
+        HitRecord hit = obj->Intersects(shadow_ray);
         // check if object blocks the light (0 < t < light_distance)
         // i.e. object is between surface and the point source
         if (hit.is_hit && hit.t > 0 && hit.t < light_dist) {
@@ -202,11 +203,11 @@ private:
       // for directional lights, any hit with t > 0 means shadow
       bool any_hit = std::any_of(objects.begin(), objects.end(),
                      [&](const auto& obj) {
-                       if (&obj == &sphere) return false;
-                       auto hit = obj.Intersects(shadow_ray);
+                       if (obj.get() == &sphere) return false;
+                       auto hit = obj->Intersects(shadow_ray);
                        if (!hit.is_hit || hit.t <= 0) return false;
                        // normal of the other object at intersection
-                       Vec3f n_other = obj.NormalAt(hit.where);
+                       Vec3f n_other = obj->NormalAt(hit.where);
                        // occlusion - one object is inside another
                        bool occluded = normal.Dot(shadow_ray.dir) < 0 &&
                          n_other.Dot(shadow_ray.dir) < 0; 

@@ -81,8 +81,8 @@ int main() {
   lights.AddDir(0.6, 0.3, -0.1, -0.3);  // main directional from upper left
   
   RayTracer ray_tracer(cam, lights);
-  for (const auto& s : spheres)
-    ray_tracer.AddObject(s);
+  for (auto& s : spheres)
+    ray_tracer.AddObject(std::move(s));
   
   ray_tracer.Trace(5);
   ray_tracer.GammaCorrect(0.7);

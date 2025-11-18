@@ -8,6 +8,7 @@
 #include "ray.hpp"
 #include "common.hpp"
 #include <vector>
+#include <memory>
 #include <limits> // numeric_limits
 
 
@@ -17,7 +18,7 @@ struct TraceRecord {
   float t{std::numeric_limits<float>::infinity()}; // hit distance
   Vec3f hit_point{};          // where the hit occured
   Vec3f normal{};             // surface normal at hit
-  const Sphere* obj{nullptr}; // hit object (nullptr if no hit)
+  const Object* obj{nullptr}; // hit object (nullptr if no hit)
 };
 
 class RayTracer {
@@ -26,8 +27,10 @@ public:
     camera_(camera),
     image_(camera.width(), camera.height()),
     lights_(lights) {}
-  // TODO: object
-  void AddObject(const Sphere& object) { objects_.push_back(object); }
+  void AddObject(std::unique_ptr<Object> object) { objects_.push_back(std::move(object)); }
+  // extend for different Object subtypes
+  void AddObject(const Sphere& s) { objects_.push_back(std::make_unique<Sphere>(s)); }
+  void AddObject(Sphere&& s) { objects_.push_back(std::make_unique<Sphere>(std::move(s))); }
   Image image() const { return image_; }
 
   void Trace(int max_reflections = 5) {
@@ -91,14 +94,14 @@ private:
   // probe the refractive index of the surrounding medium slightly off
   // the surface
   float SurroundingIOR(const Vec3f& where,
-                       const Sphere* self,
+                       const Object* self,
                        const Vec3f& outward_normal) const {
     Vec3f probe = where + outward_normal * eps * eps_factor;
     float ret = 1.0f; // default is air
     for (const auto& other : objects_) {
-      if (&other == self) continue;
-      if (other.IsInside(probe)) {
-        ret = other.material.refractive_index;
+      if (other.get() == self) continue;
+      if (other->IsInside(probe)) {
+        ret = other->material.refractive_index;
       }
     }
     return ret;
@@ -152,7 +155,7 @@ private:
     TraceRecord ret;
     // find nearest intersection
     for (const auto& obj : objects_) {
-      auto hit = obj.Intersects(ray);
+      auto hit = obj->Intersects(ray);
       // reject hits that are behind the ray's origin
       if (!hit.is_hit || hit.t <= 0) continue;
     
@@ -160,8 +163,8 @@ private:
         ret.t = hit.t;
         ret.hit = true;
         ret.hit_point = hit.where;
-        ret.obj = &obj;
-        ret.normal = obj.NormalAt(hit.where);
+        ret.obj = obj.get();
+        ret.normal = obj->NormalAt(hit.where);
       }
     }
     if (!ret.hit)
@@ -262,7 +265,7 @@ private:
   }
 
   const Camera &camera_;
-  std::vector<Sphere> objects_;
+  std::vector<std::unique_ptr<Object>> objects_;
   // image buffer to store the final colors
   Image image_;
   Lights& lights_;
