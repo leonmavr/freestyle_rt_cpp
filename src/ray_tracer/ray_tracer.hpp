@@ -27,10 +27,14 @@ public:
     camera_(camera),
     image_(camera.width(), camera.height()),
     lights_(lights) {}
-  void AddObject(std::unique_ptr<Object> object) { objects_.push_back(std::move(object)); }
-  // extend for different Object subtypes
-  void AddObject(const Sphere& s) { objects_.push_back(std::make_unique<Sphere>(s)); }
-  void AddObject(Sphere&& s) { objects_.push_back(std::make_unique<Sphere>(std::move(s))); }
+    // variadic template - T for type, Args for c/tor arguments
+    template <typename T, typename... Args>
+    requires std::derived_from<T, Object>
+    void AddObject(Args&&... args) {
+      // or forward to avoid copies: std::forward<Args>(args)...
+      auto obj = std::make_unique<T>((args)...);
+      objects_.push_back(std::move(obj));
+    }
   Image image() const { return image_; }
 
   void Trace(int max_reflections = 5) {

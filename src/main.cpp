@@ -82,8 +82,7 @@ int main() {
   
   RayTracer ray_tracer(cam, lights);
   for (auto& s : spheres)
-    ray_tracer.AddObject(std::move(s));
-  
+    ray_tracer.AddObject<Sphere>(std::move(s));
   ray_tracer.Trace(5);
   ray_tracer.GammaCorrect(0.7);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
