@@ -85,5 +85,6 @@ int main() {
     ray_tracer.AddObject(s);
   
   ray_tracer.Trace(5);
+  ray_tracer.GammaCorrect(0.7);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
 }

@@ -58,6 +58,23 @@ public:
     }
   }
 
+  // gamma < 1 brightens the low intensitites of the image,
+  // gamma > 1 darkens the high intensities
+  void GammaCorrect(float gamma) {
+    for (int row = 0; row < image_.height; ++row) {
+      for (int col = 0; col < image_.width; ++col) {
+        Vec3u8& px = image_.at(row, col);
+        px.x = static_cast<uint8_t>(std::pow(px.x / 255.0f, gamma)
+                                    * 255.0f);
+        px.y = static_cast<uint8_t>(std::pow(px.y / 255.0f, gamma)
+                                    * 255.0f);
+        px.z = static_cast<uint8_t>(std::pow(px.z / 255.0f, gamma)
+                                    * 255.0f);
+      }
+    }
+  }
+
+
 private:
   // get the corrent IOR (index of refraction) and normal arrangement
   // for refraction calculations
@@ -76,7 +93,7 @@ private:
   float SurroundingIOR(const Vec3f& where,
                        const Sphere* self,
                        const Vec3f& outward_normal) const {
-    Vec3f probe = where + outward_normal * eps * 4.0f;
+    Vec3f probe = where + outward_normal * eps * eps_factor;
     float ret = 1.0f; // default is air
     for (const auto& other : objects_) {
       if (&other == self) continue;
@@ -182,7 +199,7 @@ private:
     Ray ray_refl{{}, {}};
     ray_refl.dir = inc.ReflectAbout(ori.normal);
     // offset slightly along the normal to avoid self-intersection
-    ray_refl.origin = ret.hit_point + ori.normal * eps * 4.0f;
+    ray_refl.origin = ret.hit_point + ori.normal * eps * eps_factor;
     // -----> child ray (1): reflection
     Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
 
@@ -202,7 +219,7 @@ private:
       tir = is_tir;
       if (!tir) {
         Ray refr_ray{{}, {}};
-        refr_ray.origin = ret.hit_point + refr_dir * eps * 4.0f;
+        refr_ray.origin = ret.hit_point + refr_dir * eps * eps_factor;
         refr_ray.dir = refr_dir;
         // -----> child ray (2): refraction
         refr_color = TraceRay(refr_ray, depth - 1, n2).color;
@@ -249,6 +266,8 @@ private:
   // image buffer to store the final colors
   Image image_;
   Lights& lights_;
+  // how much to scale the eps of a normal to avoid self-intersection
+  static constexpr const float eps_factor = 40.0;
 };
 
 #endif // RAY_TRACER_HPP_
