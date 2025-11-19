@@ -72,4 +72,38 @@ struct Sphere : Object {
   }
 };
 
+struct Block : Object {
+  virtual Vec3f NormalAt(const Vec3f &at) const override {
+    // TODO
+    return {};
+  }
+  virtual bool IsInside(const Vec3f &point) const override {
+    // TODO
+    return true;
+  }
+  virtual HitRecord Intersects(const Ray& ray) const override {
+    // TODO
+   /*
+    * The parametric line of a ray from from the origin O through
+    * point B ('end' of the ray) is:
+    * R(t) = O + t(B - O) = tB
+    * This ray meets the plane for some t=t0 such that:
+    * R(t0) = B*t0
+    * Therefore R(t0) validates the equation of the plane.
+    * For the plane we know the normal vector n and the offset
+    * from the origin d. Any point X on the plane validates its
+    * equation, which is:
+    * n.X = d
+    * Since R(t0) lies on the plane:
+    * n.R(t0) = d =>
+    * n.B*t0 = d =>
+    * t0 = d/(n.B)
+    * Finally, the ray meets the plane at point
+    * R(t0) = (d/(n.B))*B
+    */
+    return {};
+  }
+
+};
+
 #endif // OBJECTS_HPP_
