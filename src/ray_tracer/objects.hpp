@@ -4,9 +4,73 @@
 #include "vec.hpp"
 #include "mat3x3.hpp"
 #include "ray.hpp"
+#include "common.hpp"
 #include <limits> // std::numeric_limits
 #include <array>
+#include <utility>
 
+//---------------------------------------------------------------------
+// Helper structs
+//---------------------------------------------------------------------
+struct Triangle {
+  Vec3f v0, v1, v2;
+  bool IsInTriangle(const Vec3f& point) const {
+    // barycentric coordinates method
+    // ref: https://users.csc.calpoly.edu/~zwood/teaching/csc471/2017F/barycentric.pdf
+    Vec3f u = v1 - v0;
+    Vec3f v = v2 - v0;
+    Vec3f w = point - v0;
+
+    float uu = u.Dot(u);
+    float uv = u.Dot(v);
+    float vv = v.Dot(v);
+    float wu = w.Dot(u);
+    float wv = w.Dot(v);
+    float denom = uv * uv - uu * vv;
+    if (std::abs(denom) < eps) return false; // degenerate triangle
+
+    // is a point p is in triangle, it can be written as
+    // p = (1 - s - t) * v0 + s * v1 + t * v2
+    // with s,t >= 0 and s + t <= 1
+    float s = (uv * wv - vv * wu) / denom;
+    float t = (uv * wu - uu * wv) / denom;
+    return (s >= 0) && (t >= 0) && (s + t <= 1);
+  }
+
+  std::tuple<Vec3f, bool> RayTriangleIntersection(const Ray& ray) const {
+    const auto none = std::make_tuple(Vec3f{}, false);
+    // Moller-Trumbore intersection algorithm
+    // ref: https://web.engr.oregonstate.edu/~mjb/vulkan/Handouts/RayTriangleIntersection.1pp.pdf
+    Vec3f edge1 = v1 - v0;
+    Vec3f edge2 = v2 - v0;
+    Vec3f h = ray.dir.Cross(edge2);
+    float a = edge1.Dot(h);
+    if (std::abs(a) < eps)
+      return none; // ray is parallel to triangle
+
+    float f = 1.0f / a;
+    Vec3f s = ray.origin - v0;
+    float u = f * s.Dot(h);
+    if (u < 0.0f || u > 1.0f)
+      return none;
+
+    Vec3f q = s.Cross(edge1);
+    float v = f * ray.dir.Dot(q);
+    if (v < 0.0f || u + v > 1.0f)
+      return none;
+    float t = f * edge2.Dot(q);
+    if (t > eps) { // ray intersection
+      return std::make_tuple(ray.origin + ray.dir * t, true);
+    } else { // that there is a line intersection but not a ray intersection
+      return none;
+    }
+  }
+};
+
+
+//---------------------------------------------------------------------
+// Objects to render
+//---------------------------------------------------------------------
 // simple hit record in world coordinates between a ray and an object
 struct HitRecord {
   Vec3f where{};
@@ -27,7 +91,8 @@ struct Material {
 
 struct Object {
   virtual Vec3f NormalAt(const Vec3f &at) const = 0;
-  virtual bool IsInside(const Vec3f &point) const = 0;
+  // only to be overriden for closed solids
+  virtual bool IsInside(const Vec3f &point) const { return false;};
   virtual HitRecord Intersects(const Ray& ray) const = 0;
   Vec3f center;
   Material material;
@@ -75,84 +140,42 @@ struct Sphere : Object {
 };
 
 struct Block : Object {
-  Block(Vec3f center, float half_x, float half_y, float half_z, const Mat3x3& mrot = {}) : rot(mrot) {
+  Block(Vec3f center, float half_x, float half_y, float half_z,
+        const Mat3x3& mrot = {}) : rot(mrot),
+                                   half_w(half_x),
+                                   half_h(half_y),
+                                   half_d(half_z) {
+    // CCW normalized vertices
     const int v[8][3] = {
-      {-1, -1, -1},
-      { 1, -1, -1},
-      { 1,  1, -1},
-      {-1,  1, -1},
-      {-1, -1,  1},
-      { 1, -1,  1},
-      { 1,  1,  1},
-      {-1,  1,  1},
+      {-1, -1, -1}, { 1, -1, -1}, { 1,  1, -1}, {-1,  1, -1},
+      {-1, -1,  1}, { 1, -1,  1}, { 1,  1,  1}, {-1,  1,  1},
     };
-
-  for (int i = 0; i < 8; ++i) {
-    Vec3f scaled( v[i][0] * half_x, v[i][1] * half_y, v[i][2] * half_z);
-    vertices[i] = center + rot * scaled;
-  }
-
+    for (int i = 0; i < 8; ++i) {
+      Vec3f vscaled(v[i][0] * half_x, v[i][1] * half_y, v[i][2] * half_z);
+      vertices[i] = center + rot * vscaled;
+    }
     axisx = (rot * Vec3f{1,0,0}).Unit();
     axisy = (rot * Vec3f{0,1,0}).Unit();
     axisz = (rot * Vec3f{0,0,1}).Unit();
-
-    // These are also face normals
-    normals[0] =  axisx;
-    normals[1] = -axisx;
-    normals[2] =  axisy;
-    normals[3] = -axisy;
-    normals[4] =  axisz;
-    normals[5] = -axisz;
   }
 
   virtual Vec3f NormalAt(const Vec3f &at) const override {
-    // at origin, no orientation
-    Vec3f aligned = rot.Transpose() * (p - center);
-
-    // which face is hit
-    float ax = std::fabs(aligned.x) - hx;
-    float ay = std::fabs(aligned.y) - hy;
-    float az = std::fabs(aligned.z) - hz;
-
-    if (std::fabs(ax) < 1e-4f && std::fabs(aligned.x) > std::fabs(aligned.y) && std::fabs(aligned.x) > std::fabs(aligned.z))
-        return (aligned.x > 0 ? axisx : -axisx);
-
-    if (std::fabs(ay) < 1e-4f && std::fabs(aligned.y) > std::fabs(aligned.x) && std::fabs(aligned.y) > std::fabs(aligned.z))
-        return (aligned.y > 0 ? axisy : -axisy);
-
-    // else Z face
-    return (aligned.z > 0 ? axisz : -axisz);
+      // TODO: find the outward normal at the nearest plane,
+      // take into account the whether we're inward or outward of the plane
   }
   virtual bool IsInside(const Vec3f &point) const override {
-    // TODO
+    
     return true;
   }
   virtual HitRecord Intersects(const Ray& ray) const override {
-    // TODO
-   /*
-    * The parametric line of a ray from from the origin O through
-    * point B ('end' of the ray) is:
-    * R(t) = O + t(B - O) = tB
-    * This ray meets the plane for some t=t0 such that:
-    * R(t0) = B*t0
-    * Therefore R(t0) validates the equation of the plane.
-    * For the plane we know the normal vector n and the offset
-    * from the origin d. Any point X on the plane validates its
-    * equation, which is:
-    * n.X = d
-    * Since R(t0) lies on the plane:
-    * n.R(t0) = d =>
-    * n.B*t0 = d =>
-    * t0 = d/(n.B)
-    * Finally, the ray meets the plane at point
-    * R(t0) = (d/(n.B))*B
-    */
+    // TODO: for each face, define 2 triangles and check 
+    // if the point is in each of them
     return {};
   }
   std::array<Vec3f, 4> vertices;
-  std::array<Vec3f, 6> normals;
   Vec3f axisx, axisy, axisz;
   Mat3x3 rot;
+  float half_w, half_h, half_d;
 };
 
 #endif // OBJECTS_HPP_
