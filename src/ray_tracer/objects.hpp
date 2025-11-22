@@ -7,61 +7,44 @@
 #include "common.hpp"
 #include <limits> // std::numeric_limits
 #include <array>
-#include <utility>
 
 //---------------------------------------------------------------------
-// Helper structs
+// Helper objects
 //---------------------------------------------------------------------
 struct Triangle {
   Vec3f v0, v1, v2;
-  bool IsInTriangle(const Vec3f& point) const {
-    // barycentric coordinates method
-    // ref: https://users.csc.calpoly.edu/~zwood/teaching/csc471/2017F/barycentric.pdf
-    Vec3f u = v1 - v0;
-    Vec3f v = v2 - v0;
-    Vec3f w = point - v0;
-
-    float uu = u.Dot(u);
-    float uv = u.Dot(v);
-    float vv = v.Dot(v);
-    float wu = w.Dot(u);
-    float wv = w.Dot(v);
-    float denom = uv * uv - uu * vv;
-    if (std::abs(denom) < eps) return false; // degenerate triangle
-
-    // is a point p is in triangle, it can be written as
-    // p = (1 - s - t) * v0 + s * v1 + t * v2
-    // with s,t >= 0 and s + t <= 1
-    float s = (uv * wv - vv * wu) / denom;
-    float t = (uv * wu - uu * wv) / denom;
-    return (s >= 0) && (t >= 0) && (s + t <= 1);
-  }
 
   std::tuple<Vec3f, bool> RayTriangleIntersection(const Ray& ray) const {
     const auto none = std::make_tuple(Vec3f{}, false);
-    // Moller-Trumbore intersection algorithm
-    // ref: https://web.engr.oregonstate.edu/~mjb/vulkan/Handouts/RayTriangleIntersection.1pp.pdf
+    // Moller-Trumbore ray-triangle intersection algorithm
+    // notation: TODO link my tutorial
+    // ref: web.engr.oregonstate.edu/~mjb/vulkan/Handouts/RayTriangleIntersection.1pp.pdf
     Vec3f edge1 = v1 - v0;
     Vec3f edge2 = v2 - v0;
+    // solve the system [edge1, edge2, -ray.dir]^T[u, v, t] = 
+    //                  [ray.origin, -V0] 
+    // using Cramer's method and the properties of mixed product
     Vec3f h = ray.dir.Cross(edge2);
     float a = edge1.Dot(h);
     if (std::abs(a) < eps)
       return none; // ray is parallel to triangle
 
-    float f = 1.0f / a;
+    float ainv = 1 / a;
     Vec3f s = ray.origin - v0;
-    float u = f * s.Dot(h);
-    if (u < 0.0f || u > 1.0f)
+    // barycetric coordinate 0..1 of a point along edge 1
+    float u = ainv * s.Dot(h);
+    if (u < 0 || u > 1)
       return none;
 
     Vec3f q = s.Cross(edge1);
-    float v = f * ray.dir.Dot(q);
-    if (v < 0.0f || u + v > 1.0f)
+    // barycetric coordinate 0..1 of a point along edge 2
+    float v = ainv * ray.dir.Dot(q);
+    if (v < 0 || u + v > 1)
       return none;
-    float t = f * edge2.Dot(q);
+    float t = ainv * edge2.Dot(q);
     if (t > eps) { // ray intersection
       return std::make_tuple(ray.origin + ray.dir * t, true);
-    } else { // that there is a line intersection but not a ray intersection
+    } else { // intersection lies behind the ray's origin 
       return none;
     }
   }
