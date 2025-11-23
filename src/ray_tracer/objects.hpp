@@ -64,14 +64,17 @@ struct Quad {
     std::array<HitRecord, 2> hits;
     Triangle t1{v0, v1, v2};
     Triangle t2{v0, v2, v3};
-    hits[0] = t1.Intersect(ray);
-    hits[1] = t2.Intersect(ray);
-    // handles very close hits too
-    if (hits[0].is_hit)
-      return hits[0];
-    if (hits[1].is_hit)
-      return hits[1];
-    return {};
+
+    HitRecord h0 = t1.Intersect(ray);
+    HitRecord h1 = t2.Intersect(ray);
+    HitRecord result;
+    if (h0.is_hit && h1.is_hit)
+      result = (h0.t < h1.t ? h0 : h1);
+    else if (h0.is_hit) 
+      result = h0;
+    else if (h1.is_hit) 
+      result = h1;
+    return result;
   }
 };
 
@@ -159,22 +162,46 @@ struct Block : Object {
     axisz = (rot * Vec3f{0,0,1}).Unit();
   }
 
-  virtual Vec3f NormalAt(const Vec3f &at) const override {
-      // TODO: find the outward normal at the nearest plane,
-      // take into account the whether we're inward or outward of the plane
-  }
-  virtual bool IsInside(const Vec3f &point) const override {
-    
-    return true;
+  virtual Vec3f NormalAt(const Vec3f& at) const override {
+    // convert to local coordinates
+    Vec3f local = rot.Transpose() * (at - center);
+
+    // Determine the face: find axis with maximum normalized absolute distance
+    float ax = std::abs(local.x) / half_w;
+    float ay = std::abs(local.y) / half_h;
+    float az = std::abs(local.z) / half_d;
+
+    Vec3f normal_local;
+    if (ax >= ay && ax >= az) {
+        // closest to ±X face
+        normal_local = Vec3f{ (local.x >= 0 ? 1.f : -1.f), 0.f, 0.f };
+    } else if (ay >= ax && ay >= az) {
+        // closest to ±Y face
+        normal_local = Vec3f{ 0.f, (local.y >= 0 ? 1.f : -1.f), 0.f };
+    } else {
+        // closest to ±Z face
+        normal_local = Vec3f{ 0.f, 0.f, (local.z >= 0 ? 1.f : -1.f) };
+    }
+
+    // Transform normal back into world space using rot
+    return (rot * normal_local).Unit();
+}
+  virtual bool IsInside(const Vec3f& point) const override {
+    // convert to block-local coordinates
+    Vec3f local = rot.Transpose() * (point - center);
+
+    return (std::abs(local.x) <= half_w + eps) &&
+           (std::abs(local.y) <= half_h + eps) &&
+           (std::abs(local.z) <= half_d + eps);
   }
   virtual HitRecord Intersects(const Ray& ray) const override {
     std::array<Quad, 6> faces = {{
-      {vertices[0], vertices[1], vertices[2], vertices[3]}, // back
+      {vertices[3], vertices[1], vertices[2], vertices[0]}, // back
       {vertices[4], vertices[5], vertices[6], vertices[7]}, // front
       {vertices[0], vertices[1], vertices[5], vertices[4]}, // bottom
-      {vertices[2], vertices[3], vertices[7], vertices[6]}, // top
-      {vertices[1], vertices[2], vertices[6], vertices[5]}, // right
-      {vertices[0], vertices[3], vertices[7], vertices[4]}  // left
+      {vertices[6], vertices[3], vertices[7], vertices[2]}, // top
+      {vertices[5], vertices[2], vertices[6], vertices[1]}, // right
+      {vertices[4], vertices[3], vertices[7], vertices[0]}  // left
     }};
     HitRecord ret;
     for (const auto& face : faces) {
@@ -184,7 +211,7 @@ struct Block : Object {
     }
     return ret;
   }
-  std::array<Vec3f, 4> vertices;
+  std::array<Vec3f, 8> vertices;
   Vec3f axisx, axisy, axisz;
   float half_w, half_h, half_d;
   Mat3x3 rot;
