@@ -66,6 +66,7 @@ struct Quad {
     Triangle t2{v0, v2, v3};
     hits[0] = t1.Intersect(ray);
     hits[1] = t2.Intersect(ray);
+    // handles very close hits too
     if (hits[0].is_hit)
       return hits[0];
     if (hits[1].is_hit)
@@ -167,9 +168,21 @@ struct Block : Object {
     return true;
   }
   virtual HitRecord Intersects(const Ray& ray) const override {
-    // TODO: find the 6 quads of the block, intrsect with it,
-    // return nearest intersection
-    return {};
+    std::array<Quad, 6> faces = {{
+      {vertices[0], vertices[1], vertices[2], vertices[3]}, // back
+      {vertices[4], vertices[5], vertices[6], vertices[7]}, // front
+      {vertices[0], vertices[1], vertices[5], vertices[4]}, // bottom
+      {vertices[2], vertices[3], vertices[7], vertices[6]}, // top
+      {vertices[1], vertices[2], vertices[6], vertices[5]}, // right
+      {vertices[0], vertices[3], vertices[7], vertices[4]}  // left
+    }};
+    HitRecord ret;
+    for (const auto& face : faces) {
+      auto hit = face.Intersect(ray);
+      if (hit.is_hit && hit.t < ret.t)
+        ret = hit;
+    }
+    return ret;
   }
   std::array<Vec3f, 4> vertices;
   Vec3f axisx, axisy, axisz;
