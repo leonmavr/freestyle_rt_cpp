@@ -51,8 +51,8 @@ struct Triangle {
       return {};
     float t = ainv * edge2.Dot(q);
     constexpr float large_t = 1e8;
-    // FIXME: temporary hack to avoid backface/frontface issues
-    if (std::abs(t) < large_t) { // ray intersection
+    // FIXME: >< 0 based on camera's z relative to its origin
+    if (t > 0) { // ray intersection
       return {ray.origin + ray.dir * t, true, t};
     } else { // intersection lies behind the ray's origin 
       return {};
@@ -198,12 +198,12 @@ struct Block : Object {
   }
   virtual HitRecord Intersects(const Ray& ray) const override {
     std::array<Quad, 6> faces = {{
-      {vertices[3], vertices[1], vertices[2], vertices[0]}, // back
+      {vertices[0], vertices[1], vertices[2], vertices[3]}, // back
       {vertices[4], vertices[5], vertices[6], vertices[7]}, // front
       {vertices[0], vertices[1], vertices[5], vertices[4]}, // bottom
-      {vertices[6], vertices[3], vertices[7], vertices[2]}, // top
-      {vertices[5], vertices[2], vertices[6], vertices[1]}, // right
-      {vertices[4], vertices[3], vertices[7], vertices[0]}  // left
+      {vertices[2], vertices[3], vertices[7], vertices[6]}, // top
+      {vertices[5], vertices[1], vertices[2], vertices[6]}, // right
+      {vertices[4], vertices[7], vertices[3], vertices[0]}  // left
     }};
     HitRecord ret;
     for (const auto& face : faces) {

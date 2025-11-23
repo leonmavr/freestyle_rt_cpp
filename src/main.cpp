@@ -87,8 +87,8 @@ int main() {
   block.material.reflective = 0.3f;
   block.material.specular = 50;
   block.material.refractive_index = 1.3f;
-  block.material.transparency = 0.25f;
-  block.material.tint = 0.3f;
+  block.material.transparency = 0.45f;
+  block.material.tint = 0.2f;
   ray_tracer.AddObject(std::move(block));
 
   ray_tracer.Trace(5);
