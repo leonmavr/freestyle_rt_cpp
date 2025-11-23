@@ -50,7 +50,9 @@ struct Triangle {
     if (v < 0 || u + v > 1)
       return {};
     float t = ainv * edge2.Dot(q);
-    if (t > eps) { // ray intersection
+    constexpr float large_t = 1e8;
+    // FIXME: temporary hack to avoid backface/frontface issues
+    if (std::abs(t) < large_t) { // ray intersection
       return {ray.origin + ray.dir * t, true, t};
     } else { // intersection lies behind the ray's origin 
       return {};
