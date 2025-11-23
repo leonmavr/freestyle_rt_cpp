@@ -8,14 +8,22 @@
 #include <limits> // std::numeric_limits
 #include <array>
 
+
+// simple hit record in world coordinates between a ray and an object
+struct HitRecord {
+  Vec3f where{};
+  bool is_hit{false};
+  // distance from ray origin to intersection point
+  float t{std::numeric_limits<float>::infinity()};
+};
+
 //---------------------------------------------------------------------
 // Helper objects
 //---------------------------------------------------------------------
 struct Triangle {
   Vec3f v0, v1, v2;
 
-  std::tuple<Vec3f, bool> RayTriangleIntersection(const Ray& ray) const {
-    const auto none = std::make_tuple(Vec3f{}, false);
+  HitRecord Intersect(const Ray& ray) const {
     // Moller-Trumbore ray-triangle intersection algorithm
     // notation: TODO link my tutorial
     // ref: web.engr.oregonstate.edu/~mjb/vulkan/Handouts/RayTriangleIntersection.1pp.pdf
@@ -27,49 +35,57 @@ struct Triangle {
     Vec3f h = ray.dir.Cross(edge2);
     float a = edge1.Dot(h);
     if (std::abs(a) < eps)
-      return none; // ray is parallel to triangle
+      return {}; // ray is parallel to triangle
 
     float ainv = 1 / a;
     Vec3f s = ray.origin - v0;
     // barycetric coordinate 0..1 of a point along edge 1
     float u = ainv * s.Dot(h);
     if (u < 0 || u > 1)
-      return none;
+      return {};
 
     Vec3f q = s.Cross(edge1);
     // barycetric coordinate 0..1 of a point along edge 2
     float v = ainv * ray.dir.Dot(q);
     if (v < 0 || u + v > 1)
-      return none;
+      return {};
     float t = ainv * edge2.Dot(q);
     if (t > eps) { // ray intersection
-      return std::make_tuple(ray.origin + ray.dir * t, true);
+      return {ray.origin + ray.dir * t, true, t};
     } else { // intersection lies behind the ray's origin 
-      return none;
+      return {};
     }
   }
 };
 
+struct Quad {
+  Vec3f v0, v1, v2, v3;
+  HitRecord Intersect(const Ray& ray) const {
+    std::array<HitRecord, 2> hits;
+    Triangle t1{v0, v1, v2};
+    Triangle t2{v0, v2, v3};
+    hits[0] = t1.Intersect(ray);
+    hits[1] = t2.Intersect(ray);
+    if (hits[0].is_hit)
+      return hits[0];
+    if (hits[1].is_hit)
+      return hits[1];
+    return {};
+  }
+};
 
 //---------------------------------------------------------------------
 // Objects to render
 //---------------------------------------------------------------------
-// simple hit record in world coordinates between a ray and an object
-struct HitRecord {
-  Vec3f where{};
-  bool is_hit{false};
-  // distance from ray origin to intersection point
-  float t{std::numeric_limits<float>::infinity()};
-};
 
 struct Material {
   Vec3u8 color{50, 235, 220};
   float specular{20};    // 10 -> matte, 100 -> shiny
-  float reflective{0};   // 0 -> non reflective, 1 -> mirror
-  float transparency{0}; // how much light transmitted through it 0 to 1
+  float reflective{0};   // 0..1, 0 -> non reflective, 1 -> mirror
+  float transparency{0}; // how much light transmitted through it 0..1
   // how much the material refracts light - 1 not at all, > 1 more
   float refractive_index{1};
-  float tint{0.1f};      // color tint for refraction (0 to 0.5)
+  float tint{0.1f};      // color tint for refraction (0..1)
 };
 
 struct Object {
@@ -124,10 +140,10 @@ struct Sphere : Object {
 
 struct Block : Object {
   Block(Vec3f center, float half_x, float half_y, float half_z,
-        const Mat3x3& mrot = {}) : rot(mrot),
-                                   half_w(half_x),
+        const Mat3x3& mrot = {}) : half_w(half_x),
                                    half_h(half_y),
-                                   half_d(half_z) {
+                                   half_d(half_z),
+                                   rot(mrot) {
     // CCW normalized vertices
     const int v[8][3] = {
       {-1, -1, -1}, { 1, -1, -1}, { 1,  1, -1}, {-1,  1, -1},
@@ -151,14 +167,14 @@ struct Block : Object {
     return true;
   }
   virtual HitRecord Intersects(const Ray& ray) const override {
-    // TODO: for each face, define 2 triangles and check 
-    // if the point is in each of them
+    // TODO: find the 6 quads of the block, intrsect with it,
+    // return nearest intersection
     return {};
   }
   std::array<Vec3f, 4> vertices;
   Vec3f axisx, axisy, axisz;
-  Mat3x3 rot;
   float half_w, half_h, half_d;
+  Mat3x3 rot;
 };
 
 #endif // OBJECTS_HPP_
