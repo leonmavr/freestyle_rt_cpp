@@ -83,6 +83,14 @@ int main() {
   RayTracer ray_tracer(cam, lights);
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
+  Block block{{250, -200, 1100}, 200, 300, 100, {-0.65, 0.35, 0.2} };
+  block.material.reflective = 0.3f;
+  block.material.specular = 50;
+  block.material.refractive_index = 1.3f;
+  block.material.transparency = 0.25f;
+  block.material.tint = 0.3f;
+  ray_tracer.AddObject(std::move(block));
+
   ray_tracer.Trace(5);
   ray_tracer.GammaCorrect(0.7);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
