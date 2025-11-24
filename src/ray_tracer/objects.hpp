@@ -18,19 +18,53 @@ struct HitRecord {
 };
 
 //---------------------------------------------------------------------
-// Helper objects
+// Base classes
 //---------------------------------------------------------------------
-struct Triangle {
+struct Material {
+  Vec3u8 color{50, 235, 220};
+  float specular{20};    // 10 -> matte, 100 -> shiny
+  float reflective{0};   // 0..1, 0 -> non reflective, 1 -> mirror
+  float transparency{0}; // how much light transmitted through it 0..1
+  // how much the material refracts light - 1 not at all, > 1 more
+  float refractive_index{1};
+  float tint{0.1f};      // color tint for refraction (0..1)
+};
+
+struct Object {
+  virtual Vec3f NormalAt(const Vec3f &at) const = 0;
+  // only to be overriden for closed solids
+  virtual bool IsInside(const Vec3f &point) const { return false;};
+  virtual HitRecord Intersects(const Ray& ray) const = 0;
+  Vec3f center;
+  Material material;
+};
+
+//---------------------------------------------------------------------
+// Objects to render
+//---------------------------------------------------------------------
+struct Triangle : Object {
   Vec3f v0, v1, v2;
 
-  HitRecord Intersect(const Ray& ray) const {
+  Triangle() = default;
+  Triangle(const Vec3f& a, const Vec3f& b, const Vec3f& c,
+           const Material& mat = {}) : v0(a), v1(b), v2(c) {
+    center = (v0 + v1 + v2) / 3.0f;
+    material = mat;
+  }
+
+  virtual Vec3f NormalAt(const Vec3f& /*at*/) const override {
+    // constant normal across the surface
+    return (v1 - v0).Cross(v2 - v0).Unit();
+  }
+
+  HitRecord Intersects(const Ray& ray) const {
     // Moller-Trumbore ray-triangle intersection algorithm
     // notation: TODO link my tutorial
     // ref: web.engr.oregonstate.edu/~mjb/vulkan/Handouts/RayTriangleIntersection.1pp.pdf
     Vec3f edge1 = v1 - v0;
     Vec3f edge2 = v2 - v0;
-    // solve the system [edge1, edge2, -ray.dir]^T[u, v, t] = 
-    //                  [ray.origin, -V0] 
+    // solve the system [edge1 | edge2 | -ray.dir]^T[u | v | t] = 
+    //                  [ray.origin | -V0] 
     // using Cramer's method and the properties of mixed product
     Vec3f h = ray.dir.Cross(edge2);
     float a = edge1.Dot(h);
@@ -60,15 +94,26 @@ struct Triangle {
   }
 };
 
-struct Quad {
+struct Quad : Object{
   Vec3f v0, v1, v2, v3;
-  HitRecord Intersect(const Ray& ray) const {
+  Quad() = default;
+  Quad(const Vec3f& a, const Vec3f& b, const Vec3f& c, const Vec3f& d,
+       const Material& mat = {}) : v0(a), v1(b), v2(c), v3(d) {
+    center = (v0 + v1 + v2 + v3) / 4.0f;
+    material = mat;
+  }
+
+  virtual Vec3f NormalAt(const Vec3f& /*at*/) const override {
+    return (v1 - v0).Cross(v2 - v0).Unit();
+  }
+
+  HitRecord Intersects(const Ray& ray) const {
     std::array<HitRecord, 2> hits;
     Triangle t1{v0, v1, v2};
     Triangle t2{v0, v2, v3};
 
-    HitRecord h0 = t1.Intersect(ray);
-    HitRecord h1 = t2.Intersect(ray);
+    HitRecord h0 = t1.Intersects(ray);
+    HitRecord h1 = t2.Intersects(ray);
     HitRecord result;
     if (h0.is_hit && h1.is_hit)
       result = (h0.t < h1.t ? h0 : h1);
@@ -78,29 +123,6 @@ struct Quad {
       result = h1;
     return result;
   }
-};
-
-//---------------------------------------------------------------------
-// Objects to render
-//---------------------------------------------------------------------
-
-struct Material {
-  Vec3u8 color{50, 235, 220};
-  float specular{20};    // 10 -> matte, 100 -> shiny
-  float reflective{0};   // 0..1, 0 -> non reflective, 1 -> mirror
-  float transparency{0}; // how much light transmitted through it 0..1
-  // how much the material refracts light - 1 not at all, > 1 more
-  float refractive_index{1};
-  float tint{0.1f};      // color tint for refraction (0..1)
-};
-
-struct Object {
-  virtual Vec3f NormalAt(const Vec3f &at) const = 0;
-  // only to be overriden for closed solids
-  virtual bool IsInside(const Vec3f &point) const { return false;};
-  virtual HitRecord Intersects(const Ray& ray) const = 0;
-  Vec3f center;
-  Material material;
 };
 
 struct Sphere : Object {
@@ -207,7 +229,7 @@ struct Block : Object {
     }};
     HitRecord ret;
     for (const auto& face : faces) {
-      auto hit = face.Intersect(ray);
+      auto hit = face.Intersects(ray);
       if (hit.is_hit && hit.t < ret.t)
         ret = hit;
     }

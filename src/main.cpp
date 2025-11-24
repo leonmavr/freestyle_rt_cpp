@@ -83,15 +83,16 @@ int main() {
   RayTracer ray_tracer(cam, lights);
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
-  Block block{{250, -200, 1100}, 200, 300, 100, {-0.65, 0.35, 0.2} };
-  block.material.reflective = 0.3f;
-  block.material.specular = 50;
-  block.material.refractive_index = 1.3f;
-  block.material.transparency = 0.45f;
-  block.material.tint = 0.2f;
-  ray_tracer.AddObject(std::move(block));
-
+  Triangle tri{{200, -150, 1200},
+                   {500, 350, 1000},
+                   {-400, 300, 900}};
+  tri.material.color = {150, 75, 0};
+  tri.material.specular = 30;
+  tri.material.reflective = 0.2f;
+  tri.material.transparency = 0.4;
+  tri.material.refractive_index = 1.4f;
+  ray_tracer.AddObject(std::move(tri));
   ray_tracer.Trace(5);
-  ray_tracer.GammaCorrect(0.7);
+  ray_tracer.GammaCorrect(0.6);
   Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
 }
