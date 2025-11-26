@@ -196,29 +196,28 @@ struct Block : Object {
   }
 
   virtual Vec3f NormalAt(const Vec3f& at) const override {
-    // convert to local coordinates
+    // align with origin and unrotate 
     Vec3f local = rot.Transpose() * (at - center);
-
-    // Determine the face: find axis with maximum normalized absolute distance
+    // determine the face: find axis with maximum normalized absolute distance
     float ax = std::abs(local.x) / half_w;
     float ay = std::abs(local.y) / half_h;
     float az = std::abs(local.z) / half_d;
 
     Vec3f normal_local;
     if (ax >= ay && ax >= az) {
-        // closest to ±X face
+        // closest to +-X face
         normal_local = Vec3f{ (local.x >= 0 ? 1.f : -1.f), 0.f, 0.f };
     } else if (ay >= ax && ay >= az) {
-        // closest to ±Y face
+        // closest to +-Y face
         normal_local = Vec3f{ 0.f, (local.y >= 0 ? 1.f : -1.f), 0.f };
     } else {
-        // closest to ±Z face
-        normal_local = Vec3f{ 0.f, 0.f, (local.z >= 0 ? 1.f : -1.f) };
+        // closest to +-Z face
+        normal_local = Vec3f{ 0, 0.f, (local.z >= 0 ? 1.f : -1.f) };
     }
-
-    // Transform normal back into world space using rot
+    // transform back into world coords 
     return (rot * normal_local).Unit();
-}
+  }
+
   virtual bool IsInside(const Vec3f& point) const override {
     // convert to block-local coordinates
     Vec3f local = rot.Transpose() * (point - center);
@@ -227,6 +226,7 @@ struct Block : Object {
            (std::abs(local.y) <= half_h + eps) &&
            (std::abs(local.z) <= half_d + eps);
   }
+
   virtual HitRecord Intersects(const Ray& ray) const override {
     std::array<Quad, 6> faces = {{
       {vertices[0], vertices[1], vertices[2], vertices[3]}, // back
@@ -252,6 +252,43 @@ struct Block : Object {
   void SetTexture(const std::shared_ptr<Image>& tex, int repeat = 1) {
     texture = tex;
     tex_repeat = std::max(1, repeat);
+  }
+  virtual Vec3u8 SampleColor(const Vec3f& at) const override {
+    if (!texture)
+      return material.color;
+    // at the origin and unrotated 
+    Vec3f local = rot.Transpose() * (at - center);
+    // find dominant orientation (axis) to identify face
+    float ax = std::abs(local.x) / half_w;
+    float ay = std::abs(local.y) / half_h;
+    float az = std::abs(local.z) / half_d;
+    float u = 0, v = 0; // texture coords in [0,1]
+    if (ax >= ay && ax >= az) { // +-X faces -> use (z,y)
+      u = (local.z / (2*half_d)) + 0.5f;
+      v = (local.y / (2*half_h)) + 0.5f;
+      if (local.x < 0)
+        u = 1 - u; // flip for -X to keep continuity
+    } else if (ay >= ax && ay >= az) { // +-Y faces -> use (x,z)
+      u = (local.x / (2*half_w)) + 0.5f;
+      v = (local.z / (2*half_d)) + 0.5f;
+      if (local.y < 0)
+        v = 1 - v; // flip for -Y
+    } else { // +-Z faces -> use (x,y)
+      u = (local.x / (2*half_w)) + 0.5f;
+      v = (local.y / (2*half_h)) + 0.5f;
+      if (local.z < 0)
+        u = 1 - u; // flip for -Z
+    }
+    // repeat pattern
+    u *= tex_repeat; v *= tex_repeat;
+    u = std::fmod(u, 1.0f); v = std::fmod(v, 1.0f);
+    if (u < 0)
+      u += 1;
+    if (v < 0)
+      v += 1;
+    unsigned tx = std::min(texture->width - 1, static_cast<unsigned>(u * texture->width));
+    unsigned ty = std::min(texture->height - 1, static_cast<unsigned>(v * texture->height));
+    return texture->at(ty, tx);
   }
 
   std::array<Vec3f, 8> vertices;
