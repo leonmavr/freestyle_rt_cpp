@@ -94,5 +94,5 @@ int main() {
   ray_tracer.AddObject(std::move(tri));
   ray_tracer.Trace(5);
   ray_tracer.GammaCorrect(0.6);
-  Ppm::SaveAs(ray_tracer.image(), "output6.ppm");
+  Ppm::Write(ray_tracer.image(), "output6.ppm");
 }

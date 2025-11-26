@@ -7,11 +7,11 @@
 #include <stdexcept>
 #include <string>
 #include <cstdint>
-
+#include <sstream>
 
 namespace Ppm {
 
-static void SaveAs(const Image &mat,
+static void Write(const Image &mat,
                    const std::string &filename = "output.ppm") {
   std::ofstream file(filename);
   if (!file)
@@ -31,6 +31,62 @@ static void SaveAs(const Image &mat,
   }
   std::cout << "=== Image saved as " + filename + " ===" << std::endl;
 }
+
+/*
+ * Handles P3 PPM file format reading and writing:
+ * P3
+ * <width> <height>
+ * <max value>
+ * <uint8 uint8 uint8> <uint8 uint8 uint8> ...
+ * <uint8 uint8 uint8> <uint8 uint8 uint8> ...
+*/
+static void Read(Image& dest, const std::string &filename) {
+  std::ifstream file(filename);
+  if (!file)
+    throw std::runtime_error("ERROR: Could not open file " + filename);
+
+  std::string line;
+  do {
+    std::getline(file, line);
+  } while (line.empty() || line[0] == '#');
+  if (line != "P3")
+    throw std::runtime_error("ERROR: Not a P3 PPM file!");
+
+  unsigned width = 0, height = 0, maxval = 0;
+  while (true) {
+    std::getline(file, line);
+    if (line.empty() || line[0] == '#') continue;
+    std::istringstream iss(line);
+    if (iss >> width >> height) break;
+  }
+
+  while (true) {
+    std::getline(file, line);
+    if (line.empty() || line[0] == '#') continue;
+    std::istringstream iss(line);
+    if (iss >> maxval) break;
+  }
+
+  dest = Image(width, height);
+  // read pixel values as (uint8, uint8, uint8)
+  unsigned x = 0, y = 0;
+  while (file && y < height) {
+    std::getline(file, line);
+    if (line.empty() || line[0] == '#') continue;
+    std::istringstream iss(line);
+    int r, g, b;
+    while (iss >> r >> g >> b) {
+      dest.at(y, x++) = Vec3u8(static_cast<uint8_t>(r),
+                               static_cast<uint8_t>(g),
+                               static_cast<uint8_t>(b));
+      if (x == width) {
+        x = 0;
+        ++y;
+      }
+    }
+  }
+}
+
 
 } // namespace Ppm
 
