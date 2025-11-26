@@ -7,6 +7,8 @@
 #include "common.hpp"
 #include <limits> // std::numeric_limits
 #include <array>
+#include <memory>
+#include <cmath>
 
 
 // simple hit record in world coordinates between a ray and an object
@@ -33,8 +35,14 @@ struct Material {
 struct Object {
   virtual Vec3f NormalAt(const Vec3f &at) const = 0;
   // only to be overriden for closed solids
-  virtual bool IsInside(const Vec3f &point) const { return false;};
+  virtual bool IsInside(const Vec3f &point) const {
+      return false;
+  }
   virtual HitRecord Intersects(const Ray& ray) const = 0;
+  // base color at point `at` on the surface - override for textures
+  virtual Vec3u8 SampleColor(const Vec3f& /*at*/) const {
+      return material.color;
+  }
   Vec3f center;
   Material material;
 };
@@ -172,6 +180,7 @@ struct Block : Object {
                                    half_h(half_y),
                                    half_d(half_z),
                                    rot(mrot) {
+    this->center = center;
     // CCW normalized vertices
     const int v[8][3] = {
       {-1, -1, -1}, { 1, -1, -1}, { 1,  1, -1}, {-1,  1, -1},
@@ -235,6 +244,16 @@ struct Block : Object {
     }
     return ret;
   }
+
+  // texture mapping 
+  std::shared_ptr<Image> texture{nullptr};
+  int tex_repeat{1}; // how many times to repeat texture per face in each axis
+  //void SetTexture(const Image& tex, int repeat = 1) {
+  void SetTexture(const std::shared_ptr<Image>& tex, int repeat = 1) {
+    texture = tex;
+    tex_repeat = std::max(1, repeat);
+  }
+
   std::array<Vec3f, 8> vertices;
   Vec3f axisx, axisy, axisz;
   float half_w, half_h, half_d;
