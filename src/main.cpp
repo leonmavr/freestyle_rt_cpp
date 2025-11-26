@@ -83,15 +83,17 @@ int main() {
   RayTracer ray_tracer(cam, lights);
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
-  Triangle tri{{200, -150, 1200},
-                   {500, 350, 1000},
-                   {-400, 300, 900}};
-  tri.material.color = {150, 75, 0};
-  tri.material.specular = 30;
-  tri.material.reflective = 0.2f;
-  tri.material.transparency = 0.4;
-  tri.material.refractive_index = 1.4f;
-  ray_tracer.AddObject(std::move(tri));
+  // TODO: add a no-argument c/tor for image
+  // size here will be overwritten by Read
+  auto tex_brick = std::make_shared<Image>(1,1);
+  Ppm::Read(*tex_brick, "textures/marble_01.ppm");
+  Block block({200, 300, 1300}, 300, 200, 300); // center, half sizes
+  block.material.specular = 20; // shinier to see highlights
+  block.material.reflective = 0.f;
+  block.material.transparency = 0.0f; // opaque
+  block.SetTexture(tex_brick, 2); // repeat texture 3x per face
+  ray_tracer.AddObject(std::move(block));
+ 
   ray_tracer.Trace(5);
   ray_tracer.GammaCorrect(0.6);
   Ppm::Write(ray_tracer.image(), "output6.ppm");

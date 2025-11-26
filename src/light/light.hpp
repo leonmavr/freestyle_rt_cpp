@@ -112,9 +112,11 @@ public:
   
     diffuse_intensity = std::min(diffuse_intensity, 1.0f);
     specular_intensity = std::min(specular_intensity, 1.0f);
-    uint8_t r = sphere.material.color.x;
-    uint8_t g = sphere.material.color.y;
-    uint8_t b = sphere.material.color.z;
+    //uint8_t r = sphere.material.color.x;
+    //uint8_t g = sphere.material.color.y;
+    //uint8_t b = sphere.material.color.z;
+    Vec3u8 sample = sphere.SampleColor(at);
+    uint8_t r = sample.x, g = sample.y, b = sample.z;
     return Vec3u8{
       static_cast<uint8_t>(std::min(r * diffuse_intensity +
                                     255*specular_intensity , 255.0f)),
