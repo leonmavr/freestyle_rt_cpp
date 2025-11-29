@@ -259,35 +259,39 @@ struct Block : Object {
     // at the origin and unrotated 
     Vec3f local = rot.Transpose() * (at - center);
     // find dominant orientation (axis) to identify face
+    // the maximum of these distances corresponds to face that was hit
     float ax = std::abs(local.x) / half_w;
     float ay = std::abs(local.y) / half_h;
     float az = std::abs(local.z) / half_d;
-    float u = 0, v = 0; // texture coords in [0,1]
+    // texture normalized coordinates - they'll later map to a pixel
+    float u = 0, v = 0;
     if (ax >= ay && ax >= az) { // +-X faces -> use (z,y)
       u = (local.z / (2*half_d)) + 0.5f;
       v = (local.y / (2*half_h)) + 0.5f;
       if (local.x < 0)
-        u = 1 - u; // flip for -X to keep continuity
+        u = 1 - u; // flip for -x to keep continuity
     } else if (ay >= ax && ay >= az) { // +-Y faces -> use (x,z)
       u = (local.x / (2*half_w)) + 0.5f;
       v = (local.z / (2*half_d)) + 0.5f;
       if (local.y < 0)
-        v = 1 - v; // flip for -Y
+        v = 1 - v; // flip for -y
     } else { // +-Z faces -> use (x,y)
       u = (local.x / (2*half_w)) + 0.5f;
       v = (local.y / (2*half_h)) + 0.5f;
       if (local.z < 0)
-        u = 1 - u; // flip for -Z
+        u = 1 - u; // flip for -z
     }
-    // repeat pattern
-    u *= tex_repeat; v *= tex_repeat;
-    u = std::fmod(u, 1.0f); v = std::fmod(v, 1.0f);
+    // repeat pattern - multiply and keep the fractional part of u, v
+    u = std::fmod(u*tex_repeat, 1.0f);
+    v = std::fmod(v*tex_repeat, 1.0f);
     if (u < 0)
       u += 1;
     if (v < 0)
       v += 1;
-    unsigned tx = std::min(texture->width - 1, static_cast<unsigned>(u * texture->width));
-    unsigned ty = std::min(texture->height - 1, static_cast<unsigned>(v * texture->height));
+    unsigned tx = std::min(texture->width - 1,
+                           static_cast<unsigned>(u * texture->width));
+    unsigned ty = std::min(texture->height - 1,
+                           static_cast<unsigned>(v * texture->height));
     return texture->at(ty, tx);
   }
 
