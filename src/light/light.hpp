@@ -220,7 +220,7 @@ private:
         return bright_max;
 
       // same as before, however use only part (2) of the heuristic
-      ret = std::clamp(normal.Dot(shadow_ray.dir, 0.0f, 1.0f);
+      ret = std::clamp(normal.Dot(shadow_ray.dir), 0.0f, 1.0f);
 
     }
     return std::clamp(ret, bright_min, bright_max);
