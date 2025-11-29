@@ -218,8 +218,6 @@ private:
                     });
       if (!any_hit)
         return bright_max;
-      //else
-      //  return bright_min;
 
       const Vec3f light_dir = -*light.data;
       // same as before, however use only part (2) of the heuristic
