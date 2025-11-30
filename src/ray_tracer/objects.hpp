@@ -247,11 +247,15 @@ struct Block : Object {
 
   // texture mapping 
   std::shared_ptr<Image> texture{nullptr};
-  int tex_repeat{1}; // how many times to repeat texture per face in each axis
+  int repeatx{1}; // how many times to repeat texture per face in x axis
+  int repeaty{1}; // how many times to repeat texture per face in y axis
   //void SetTexture(const Image& tex, int repeat = 1) {
-  void SetTexture(const std::shared_ptr<Image>& tex, int repeat = 1) {
+  void SetTexture(const std::shared_ptr<Image>& tex,
+                  int repeatx = 1,
+                  int repeaty = 1) {
     texture = tex;
-    tex_repeat = std::max(1, repeat);
+    this->repeatx = std::max(1, repeatx);
+    this->repeaty = std::max(1, repeaty);
   }
   virtual Vec3u8 SampleColor(const Vec3f& at) const override {
     if (!texture)
@@ -282,8 +286,8 @@ struct Block : Object {
         u = 1 - u; // flip for -z
     }
     // repeat pattern - multiply and keep the fractional part of u, v
-    u = std::fmod(u*tex_repeat, 1.0f);
-    v = std::fmod(v*tex_repeat, 1.0f);
+    u = std::fmod(u*repeatx, 1.0f);
+    v = std::fmod(v*repeaty, 1.0f);
     if (u < 0)
       u += 1;
     if (v < 0)
