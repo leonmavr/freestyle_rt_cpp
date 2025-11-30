@@ -22,6 +22,7 @@ T Map(T x, T a, T b, T c, T d) {
 template <typename T>
 struct Mat {
   std::vector<T> data;
+  Mat() = default;
   Mat(unsigned w, unsigned h) : width(w), height(h), data(w * h) {}
 
   T& at(unsigned row, unsigned col) {
