@@ -96,8 +96,6 @@ public:
     
       // ref: 
       // gabrielgambetta.com/computer-graphics-from-scratch/03-light.html
-      float ndotl = std::max(N.Dot(light_dir), 0.0f);
-      const bool normal_facing_light = N.Dot(light_dir) > 0;
       if (sphere.material.specular > 0) {
         Vec3f reflected = light_dir.ReflectAbout(N).Unit();
         float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
@@ -105,6 +103,8 @@ public:
                               std::pow(refl_dot_view, sphere.material.specular) *
                               shadow_brightness;
       }
+      float ndotl = std::max(N.Dot(light_dir), 0.0f);
+      const bool normal_facing_light = N.Dot(light_dir) > 0;
       if (normal_facing_light) {
         diffuse_intensity += light.intensity * ndotl * shadow_brightness;
       }
