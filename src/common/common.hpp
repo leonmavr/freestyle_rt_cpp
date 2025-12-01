@@ -19,6 +19,8 @@ T Map(T x, T a, T b, T c, T d) {
   return c + (d - c) * (x - a) / (b - a);
 }
 
+static float Deg2Rad(float deg) { return deg * M_PI / 180; }
+
 template <typename T>
 struct Mat {
   std::vector<T> data;

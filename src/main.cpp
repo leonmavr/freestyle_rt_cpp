@@ -3,18 +3,52 @@
 #include "ppm_writer.hpp"
 #include "ray_tracer.hpp"
 #include "vec.hpp"
+#include "common.hpp"
 #include <vector>
+#include <string>
+#include <iostream>
+#include <cmath>
 
-int main() {
-  constexpr int focal_length = 1400, fovx_deg = 120, fovy_deg = 100,
+int main(int argc, char** argv) {
+  constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
-  Camera cam(focal_length, fovx_deg, fovy_deg, {0, 0, camz});
+  // default camera parameters
+  Vec3f cam_center{0, 0, camz};
+  Mat3x3 cam_rot; // identity
+  std::string output_file = "output.ppm";
+
+  // first argument is the output file
+  if (argc > 1 && argv[1] != nullptr)
+    output_file = std::string(argv[1]);
+  // next 3 arguments are the camera center
+  if (argc >= 5) {
+    try {
+      cam_center.x = std::stof(argv[2]);
+      cam_center.y = std::stof(argv[3]);
+      cam_center.z = std::stof(argv[4]);
+    } catch (...) {
+      std::cerr << "Invalid camera center arguments, using defaults\n";
+    }
+  }
+  // next 3 are the camera rotation
+  if (argc >= 8) {
+    try {
+      float rx = Deg2Rad(std::stof(argv[5]));
+      float ry = Deg2Rad(std::stof(argv[6]));
+      float rz = Deg2Rad(std::stof(argv[7]));
+      cam_rot = Mat3x3(rx, ry, rz);
+    } catch (...) {
+      std::cerr << "Invalid camera rotation arguments, using defaults\n";
+    }
+  }
+  Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
+
   Lights lights;
   lights.AddAmbient(0.85);
   lights.AddDir(0.6, 0.1, -0.7, -0.3);
   lights.AddDir(0.6, -0.3, -0.5, -0.3);
   lights.AddDir(0.6, 0, 0.2, -0.3);
-  lights.AddPoint(1.6, -3000, 0 , 2000);
+  lights.AddPoint(1, -3000, 0 , 2000);
   lights.AddPoint(1, -1800, -3700, 5000);
   lights.AddPoint(0.45, -4000, -4000, 1000);
   RayTracer ray_tracer(cam, lights);
@@ -81,14 +115,14 @@ int main() {
   auto white_marble = std::make_shared<Image>(1,1);
   Ppm::Read(*white_marble, "resources/textures/marble_01.ppm");
   Block block1({-1700, 800, 450}, 150, 700, 70);
-  block1.material.reflective = 0.3;
-  block1.material.specular = 200;
+  block1.material.reflective = 0.1;
+  block1.material.specular = 2;
   block1.SetTexture(white_marble, 1, 3);
   blocks.emplace_back(block1);
 
   Block block2({1700, 800, 450}, 150, 700, 70);
-  block2.material.reflective = 0.3;
-  block2.material.specular = 1;
+  block2.material.reflective = 0.1;
+  block2.material.specular = 2;
   block2.SetTexture(white_marble, 1, 3);
   blocks.emplace_back(block2);
 
@@ -105,6 +139,7 @@ int main() {
 
   Block block5({-3500, -3200, 8000}, 350, 400, 400, {0.3, 0, -0.6});
   block5.SetTexture(tex_granite);
+  block5.material.specular = 1;
   blocks.emplace_back(block5);
   
   Block block6({4500, -2600, 4000}, 180, 230, 280, {1.5, 1, -0.3});
@@ -114,7 +149,7 @@ int main() {
   auto tex = std::make_shared<Image>();
   Ppm::Read(*tex, "resources/textures/checkerboard_02.ppm");
   Block ground({0, 1500, 4000}, 6500, 20, 8000);
-  ground.material.specular = 20;
+  ground.material.specular = 2;
   ground.material.reflective = 0.f;
   ground.material.transparency = 0.0f; // opaque
   ground.SetTexture(tex, 10, 10);
@@ -125,7 +160,8 @@ int main() {
   for (auto & b : blocks)
     ray_tracer.AddObject(std::move(b));
  
-  ray_tracer.Trace(4);
+  ray_tracer.Trace(2);
   ray_tracer.GammaCorrect(0.8);
-  Ppm::Write(ray_tracer.image(), "output6.ppm");
+  Ppm::Write(ray_tracer.image(), output_file);
 }
+

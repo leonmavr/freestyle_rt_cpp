@@ -3,6 +3,7 @@
 
 #include "mat3x3.hpp"
 #include "vec.hpp"
+#include "common.hpp"
 #include <cmath> // M_PI
 #include <utility>
 #include <array>
@@ -10,8 +11,6 @@
 
 // pinhole camera model
 class Camera {
-  float Deg2Rad(float deg) { return deg * M_PI / 180; }
-
 public:
   Camera(float focal_length, float fovx_deg, float fovy_deg,
          Vec3f center = {0, 0, 0}, Mat3x3 rot = {})
