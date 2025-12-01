@@ -52,12 +52,12 @@ public:
 
   // diffuse and specular light contribution at a point on an object
   Vec3u8 ColorAt(const std::vector<std::unique_ptr<Object>>& objects,
-                 const Object &sphere,
+                 const Object &object,
                  const Vec3f &at,
                  const Camera &camera) const {
     float diffuse_intensity = 0.0;
     float specular_intensity = 0.0;
-    Vec3f N = sphere.NormalAt(at);
+    Vec3f N = object.NormalAt(at);
     Vec3f view_dir = (camera.center() - at).Unit();
   
     for (const auto &light: lights_) {
@@ -68,7 +68,7 @@ public:
     
       // check for shadows before computing diffuse/specular component
       float shadow_brightness = ShadowFactor(light, objects,
-                     sphere, at, N);
+                     object, at, N);
       if (shadow_brightness < eps)
         continue; // fully occluded - save computation time
     
@@ -96,11 +96,11 @@ public:
     
       // ref: 
       // gabrielgambetta.com/computer-graphics-from-scratch/03-light.html
-      if (sphere.material.specular > 0) {
+      if (object.material.specular > 0) {
         Vec3f reflected = light_dir.ReflectAbout(N).Unit();
         float refl_dot_view = std::max(reflected.Dot(view_dir), 0.0f);
         specular_intensity += light.intensity *
-                              std::pow(refl_dot_view, sphere.material.specular) *
+                              std::pow(refl_dot_view, object.material.specular) *
                               shadow_brightness;
       }
       float ndotl = std::max(N.Dot(light_dir), 0.0f);
@@ -115,7 +115,7 @@ public:
     //uint8_t r = sphere.material.color.x;
     //uint8_t g = sphere.material.color.y;
     //uint8_t b = sphere.material.color.z;
-    Vec3u8 sample = sphere.SampleColor(at);
+    Vec3u8 sample = object.SampleColor(at);
     uint8_t r = sample.x, g = sample.y, b = sample.z;
     return Vec3u8{
       static_cast<uint8_t>(std::min(r * diffuse_intensity +
@@ -132,7 +132,7 @@ private:
 
   static float ShadowFactor(const Light& light,
                             const std::vector<std::unique_ptr<Object>>& objects,
-                            const Object& sphere,
+                            const Object& object,
                             const Vec3f& at,
                             const Vec3f& normal) {
     // shift up the origin a bit to avoid self-intersection
@@ -169,7 +169,7 @@ private:
       bool any_hit = false;
       for (const auto &obj : objects) {
         // skip self-intersection
-        if (obj.get() == &sphere) continue;
+        if (obj.get() == &object) continue;
         HitRecord hit = obj->Intersects(shadow_ray);
         // check if object blocks the light (0 < t < light_distance)
         // i.e. object is between surface and the point source
@@ -205,7 +205,7 @@ private:
       // for directional lights, any hit with t > 0 means shadow
       bool any_hit = std::any_of(objects.begin(), objects.end(),
                      [&](const auto& obj) {
-                       if (obj.get() == &sphere) return false;
+                       if (obj.get() == &object) return false;
                        auto hit = obj->Intersects(shadow_ray);
                        if (!hit.is_hit || hit.t <= 0) return false;
                        // normal of the other object at intersection
