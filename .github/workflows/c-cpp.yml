@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ "master" ]
 
+# Grant the workflow explicit permissions. Creating/releases requires
+# write access to repository contents. By default GITHUB_TOKEN may be
+# scoped down for PRs from forks, so we also guard release steps to
+# run only on push events.
+permissions:
+  contents: write
+
 jobs:
   build:
 
@@ -36,6 +43,7 @@ jobs:
         body: "Rendered image from workflow run ${{ github.run_id }}"
         draft: false
         prerelease: false
+      if: github.event_name == 'push'
 
     - name: Upload release image
       uses: actions/upload-release-asset@v1
@@ -46,3 +54,4 @@ jobs:
         asset_path: output.ppm
         asset_name: output.ppm
         asset_content_type: application/octet-stream
+      if: github.event_name == 'push'
