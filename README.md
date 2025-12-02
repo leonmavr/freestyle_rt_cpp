@@ -4,7 +4,6 @@ My first fully working ray tracer running on the CPU.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 
-
 ## Features
 
 * Phong lighting model (embient, diffuse, specular light).
