@@ -4,7 +4,7 @@ My first fully working ray tracer running on the CPU.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 
-<a href="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.ppm"><img src="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.ppm" width="500" alt="output.ppm"/></a>
+<a href="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.jpg"><img src="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.jpg" width="500" alt="output.jpg"/></a>
 
 ## Features
 
