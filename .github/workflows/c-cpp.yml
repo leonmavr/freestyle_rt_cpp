@@ -6,10 +6,7 @@ on:
   pull_request:
     branches: [ "master" ]
 
-# Grant the workflow explicit permissions. Creating/releases requires
-# write access to repository contents. By default GITHUB_TOKEN may be
-# scoped down for PRs from forks, so we also guard release steps to
-# run only on push events.
+# Creating/releases requires write access to repository contents
 permissions:
   contents: write
 
@@ -26,11 +23,24 @@ jobs:
     - name: Run demo and produce an output scene
       run: ./demo output.ppm
 
-    - name: Upload rendered image
+    - name: Install ImageMagick
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y imagemagick
+
+    - name: Convert PPM to JPG
+      run: |
+        if command -v magick >/dev/null 2>&1; then
+          magick output.ppm -quality 90 output.jpg
+        elif command -v convert >/dev/null 2>&1; then
+          convert output.ppm -quality 90 output.jpg
+        fi
+
+    - name: Upload rendered image (JPG only)
       uses: actions/upload-artifact@v4
       with:
         name: rendered-image
-        path: output.ppm
+        path: output.jpg
 
     - name: Create a release
       id: create_release
@@ -45,13 +55,13 @@ jobs:
         prerelease: false
       if: github.event_name == 'push'
 
-    - name: Upload release image
+    - name: Upload release image (JPG)
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: output.ppm
-        asset_name: output.ppm
-        asset_content_type: application/octet-stream
+        asset_path: output.jpg
+        asset_name: output.jpg
+        asset_content_type: image/jpeg
       if: github.event_name == 'push'
