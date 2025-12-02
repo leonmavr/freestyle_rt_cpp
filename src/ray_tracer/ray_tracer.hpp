@@ -2,6 +2,7 @@
 #define RAY_TRACER_HPP_
 
 #include "common.hpp"
+#include "ppm_writer.hpp"
 #include "objects.hpp"
 #include "light.hpp"
 #include "camera.hpp"
@@ -10,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <limits> // numeric_limits
+#include <cmath>
 
 
 struct TraceRecord {
@@ -26,12 +28,15 @@ public:
   RayTracer(const Camera& camera, Lights& lights) :
     camera_(camera),
     image_(camera.width(), camera.height()),
-    lights_(lights) {}
+    lights_(lights),
+    has_background_(false) {}
+
   template <typename T>
   void AddObject(T&& obj) {
     // with std::forward to preserve rvalue/lvalue nature
     objects_.push_back(std::make_unique<T>(std::forward<T>(obj)));
   }
+
   const Image& image() { return image_; }
 
   void Trace(int max_reflections = 5) {
@@ -39,12 +44,19 @@ public:
     // current camera plane corners (world-space)
     auto corners = camera_.CornersWorld();
     // local camera axes in world space for rasterization
-    Vec3f tl = corners[0];
-    Vec3f tr = corners[1];
-    Vec3f bl = corners[2];
-    // horizontal (u) and vertical (v) world span vectors
-    Vec3f span_h = tr - tl;
-    Vec3f span_v = bl - tl;
+    Vec3f world_tl = corners[0];
+    Vec3f world_tr = corners[1];
+    Vec3f world_bl = corners[2];
+    // horizontal (u) and vertical (v) world span vectors,
+    // centerd at origin
+    Vec3f span_h = world_tr - world_tl;
+    Vec3f span_v = world_bl - world_tl;
+    // TODO: cam_forward_, cam_right_, cam_up_ are only needed for
+    // background sampling -> move them there
+    // unit forward, right, and up unprojection span vectors (world)
+    cam_forward_ = (camera_.Unproject(0, 0) - camera_.center()).Unit();
+    cam_right_ = (world_tr - world_tl).Unit();
+    cam_up_ = (world_bl - world_tl).Unit();
     int w = camera_.width();
     int h = camera_.height();
     for (int col = 0; col < w; ++col) {
@@ -53,11 +65,11 @@ public:
       for (int row = 0; row < h; ++row) {
         float v = static_cast<float>(row) / static_cast<float>(h - 1);
         // bilinear point on the (possibly rotated) image plane
-        Vec3f point_world = tl + span_h * u + span_v * v;
+        Vec3f point_world = world_tl + span_h * u + span_v * v;
         Ray ray(camera_.center(), point_world);
         auto result = TraceRay(ray, max_reflections);
-        if (result.hit)
-          image_.at(row, col) = result.color;
+        // Always write the color; TraceRay fills background on miss
+        image_.at(row, col) = result.color;
       }
     }
   }
@@ -78,6 +90,10 @@ public:
     }
   }
 
+  void ReadBackground(const std::string& filename) {
+    Ppm::Read(background_, filename);
+    has_background_ = (background_.width > 0 && background_.height > 0);
+  }
 
 private:
   // get the corrent IOR (index of refraction) and normal arrangement
@@ -130,7 +146,7 @@ private:
   }
 
   // returns refracted vector (Snell's vectorized law) and whether TIR
-  // occused
+  // occured
   std::pair<bool, Vec3f>
   Refract(const Vec3f &incident, /* incident ray direction */
           const Vec3f &N,        /* normal at intersection */
@@ -168,8 +184,11 @@ private:
         ret.normal = obj->NormalAt(hit.where);
       }
     }
-    if (!ret.hit)
-      return ret; // background color and no hit
+    if (!ret.hit) {
+      // no hit; return background color contribution
+      if (has_background_) ret.color = SampleBackground(ray.dir);
+      return ret;
+    }
 
     // material parameters
     float mat_trans = std::clamp(ret.obj->material.transparency,
@@ -265,6 +284,34 @@ private:
     return ret;
   }
 
+  // map ray direction to background image using equirectangular mapping
+  Vec3u8 SampleBackground(const Vec3f& dir_world) const {
+    if (!has_background_) return {0,0,0};
+    // express direction in camera space (project to camera axes)
+    float x = dir_world.Dot(cam_right_);
+    float y = dir_world.Dot(cam_up_);
+    float z = dir_world.Dot(cam_forward_);
+    // yaw in [-180,180], pitch in [-90,90]
+    float yaw_deg = std::atan2(x, z) * 180.0f /
+                    static_cast<float>(M_PI);
+    float pitch_deg = std::atan2(y, std::sqrt(x*x + z*z)) * 180.0f /
+                      static_cast<float>(M_PI);
+    // map to [0,1) x [0,1]
+    float u = (yaw_deg + 180) / 360; // wrap horizontally
+    // wrap u to [0,1)
+    u = std::fmod(u, 1.0f);
+    if (u < 0.0f) u += 1;
+    // flip vertical mapping
+    float v = (pitch_deg + 90) / 180; // 0 = top, 1 = bottom
+    v = std::clamp(v, 0.0f, 1.0f);
+    // convert to pixel indices (nearest neighbor)
+    unsigned w = background_.width;
+    unsigned h = background_.height;
+    unsigned px = std::min(static_cast<unsigned>(u * w), w ? w - 1 : 0);
+    unsigned py = std::min(static_cast<unsigned>(v * h), h ? h - 1 : 0);
+    return background_.at(py, px);
+  }
+
   const Camera &camera_;
   std::vector<std::unique_ptr<Object>> objects_;
   // image buffer to store the final colors
@@ -272,6 +319,13 @@ private:
   Lights& lights_;
   // how much to scale the eps of a normal to avoid self-intersection
   static constexpr const float eps_factor = 40.0;
+  // cached camera basis for mapping rays to background image
+  Vec3f cam_right_{};
+  Vec3f cam_up_{};
+  Vec3f cam_forward_{};
+  // spherical background
+  Image background_{};
+  bool has_background_{false};
 };
 
 #endif // RAY_TRACER_HPP_

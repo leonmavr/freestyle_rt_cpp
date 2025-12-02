@@ -150,11 +150,12 @@ int main(int argc, char** argv) {
   Ppm::Read(*tex, "resources/textures/checkerboard_02.ppm");
   Block ground({0, 1500, 4000}, 6500, 20, 8000);
   ground.material.specular = 2;
-  ground.material.reflective = 0.f;
-  ground.material.transparency = 0.0f; // opaque
+  ground.material.reflective = 0.3f;
+  ground.material.transparency = 0.1f; // opaque
   ground.SetTexture(tex, 10, 10);
   ray_tracer.AddObject(std::move(ground));
 
+  //ray_tracer.ReadBackground("resources/bg/03.ppm");
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
   for (auto & b : blocks)

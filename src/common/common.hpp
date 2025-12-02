@@ -23,8 +23,7 @@ static float Deg2Rad(float deg) { return deg * M_PI / 180; }
 
 template <typename T>
 struct Mat {
-  std::vector<T> data;
-  Mat() = default;
+  Mat() : data(), width(0), height(0) {}
   Mat(unsigned w, unsigned h) : width(w), height(h), data(w * h) {}
 
   T& at(unsigned row, unsigned col) {
@@ -38,6 +37,7 @@ struct Mat {
     return data[row * width + col];
   }
 
+  std::vector<T> data;
   unsigned width;
   unsigned height;
 };
