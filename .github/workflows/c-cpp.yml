@@ -13,5 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: make
+    - name: Build
       run: make
+
+    - name: Run demo and produce an output scene
+      run: ./demo output.ppm
+
+    - name: Upload rendered image
+      uses: actions/upload-artifact@v3
+      with:
+        name: rendered-image
+        path: output.ppm
