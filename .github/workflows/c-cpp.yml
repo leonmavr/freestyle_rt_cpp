@@ -20,7 +20,7 @@ jobs:
       run: ./demo output.ppm
 
     - name: Upload rendered image
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: rendered-image
         path: output.ppm
