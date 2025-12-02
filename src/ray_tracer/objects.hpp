@@ -9,6 +9,7 @@
 #include <array>
 #include <memory>
 #include <cmath>
+#include <algorithm>  // clamp
 
 
 // simple hit record in world coordinates between a ray and an object
@@ -142,6 +143,42 @@ struct Sphere : Object {
   virtual bool IsInside(const Vec3f &point) const override {
     return (point - center).Dot(point - center) < radius * radius;
   }
+  // optional texture for sphere using equirectangular mapping
+  std::shared_ptr<Image> texture{nullptr};
+  int repeat_u{1};
+  int repeat_v{1};
+  void SetTexture(const std::shared_ptr<Image>& tex,
+                  int repeat_u = 1,
+                  int repeat_v = 1) {
+    texture = tex;
+    this->repeat_u = std::max(1, repeat_u);
+    this->repeat_v = std::max(1, repeat_v);
+  }
+  virtual Vec3u8 SampleColor(const Vec3f& at) const override {
+    if (!texture)
+      return material.color;
+    // compute normal in object space (sphere centered at center)
+    Vec3f N = (at - center).Unit();
+    // spherical angles
+    float theta = std::atan2(N.z, N.x); // [-pi, +pi]
+    float Ny = std::clamp(N.y, -1.0f, 1.0f);
+    float phi = std::acos(Ny);
+    // equirectangular mapping but for spherical coords
+    float u = theta / (2.0f * static_cast<float>(M_PI)) + 0.5f;
+    float v = phi / static_cast<float>(M_PI);
+    // flip so v=0 is top row in image coordinates
+    v = 1.0f - v;
+    // apply repeats and wrapping
+    u = std::fmod(u * repeat_u, 1.0f);
+    v = std::fmod(v * repeat_v, 1.0f);
+    if (u < 0) u += 1.0f;
+    if (v < 0) v += 1.0f;
+    unsigned tw = texture->width, th = texture->height;
+    unsigned x = std::min(tw ? tw - 1 : 0, static_cast<unsigned>(u * tw));
+    unsigned y = std::min(th ? th - 1 : 0, static_cast<unsigned>(v * th));
+    return texture->at(y, x);
+  }
+
   virtual HitRecord Intersects(const Ray& ray) const override {
     HitRecord ret; // empty by default (no intersection)
     // notation of ray-sphere intersection formula
@@ -206,13 +243,13 @@ struct Block : Object {
     Vec3f normal_local;
     if (ax >= ay && ax >= az) {
         // closest to +-X face
-        normal_local = Vec3f{ (local.x >= 0 ? 1.f : -1.f), 0.f, 0.f };
+        normal_local = Vec3f{(local.x >= 0 ? 1 : -1), 0, 0};
     } else if (ay >= ax && ay >= az) {
         // closest to +-Y face
-        normal_local = Vec3f{ 0.f, (local.y >= 0 ? 1.f : -1.f), 0.f };
+        normal_local = Vec3f{0.f, (local.y >= 0 ? 1 : -1), 0};
     } else {
         // closest to +-Z face
-        normal_local = Vec3f{ 0, 0.f, (local.z >= 0 ? 1.f : -1.f) };
+        normal_local = Vec3f{0, 0.f, (local.z >= 0 ? 1 : -1)};
     }
     // transform back into world coords 
     return (rot * normal_local).Unit();
