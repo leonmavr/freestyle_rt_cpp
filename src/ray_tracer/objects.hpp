@@ -161,8 +161,7 @@ struct Sphere : Object {
     Vec3f N = (at - center).Unit();
     // spherical angles
     float theta = std::atan2(N.z, N.x); // [-pi, +pi]
-    float Ny = std::clamp(N.y, -1.0f, 1.0f);
-    float phi = std::acos(Ny);
+    float phi = std::acos(N.y);         // assuming N normalized
     // equirectangular mapping but for spherical coords
     float u = theta / (2.0f * static_cast<float>(M_PI)) + 0.5f;
     float v = phi / static_cast<float>(M_PI);

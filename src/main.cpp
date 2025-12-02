@@ -93,12 +93,14 @@ int main(int argc, char** argv) {
   sphere4.material.reflective = 0.2;
   spheres.emplace_back(sphere4);
 
+  auto tex_earth = std::make_shared<Image>();
+  Ppm::Read(*tex_earth, "resources/textures/earth.ppm");
   Sphere sphere5;
   sphere5.center = {1300, -700, 5600};
   sphere5.material.color = {240, 34, 181};
   sphere5.radius = 600;
   sphere5.material.specular = 50;
-  sphere5.material.reflective = 0.;
+  sphere5.SetTexture(tex_earth);
   spheres.emplace_back(sphere5);
 
   Sphere sphere6;
@@ -112,7 +114,7 @@ int main(int argc, char** argv) {
   sphere6.material.tint = 0.75;
   spheres.emplace_back(sphere6);
   
-  auto white_marble = std::make_shared<Image>(1,1);
+  auto white_marble = std::make_shared<Image>();
   Ppm::Read(*white_marble, "resources/textures/marble_01.ppm");
   Block block1({-1700, 800, 450}, 150, 700, 70);
   block1.material.reflective = 0.1;
@@ -165,4 +167,3 @@ int main(int argc, char** argv) {
   ray_tracer.GammaCorrect(0.8);
   Ppm::Write(ray_tracer.image(), output_file);
 }
-
