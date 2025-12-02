@@ -2,16 +2,18 @@
 set -euo pipefail
 
 ### About:
-# Converts all .png files in "textures" directory to P3 8-bit .ppm format
+# Converts all .png, .jpg and .jpeg files in `resources/textures` and `resources/bg`
+# directories to P3 8-bit .ppm format
 ### Requirements:
 # ImageMagick (`magick` or `convert` command)
 
 readonly script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly textures_dir="$script_dir/../textures"
+readonly textures_dir="$script_dir/../resources/textures"
+readonly bg_dir="$script_dir/../resources/bg"
 
-[ ! -d "$textures_dir" ] &&\
-    echo "Textures directory not found: $textures_dir" >&2 &&\
-    exit 1
+# allow missing directories but warn
+[ ! -d "$textures_dir" ] && echo "Warning: Textures directory not found: $textures_dir" >&2
+[ ! -d "$bg_dir" ] && echo "Warning: BG directory not found: $bg_dir" >&2
 
 if command -v magick >/dev/null 2>&1; then
     CONVERT_CMD=(magick)
@@ -22,14 +24,23 @@ else
     exit 1
 fi
 
-readonly pngs=("$textures_dir"/*.png)
-if [ ${#pngs[@]} -eq 0 ]; then
-    echo "No .png files found in: $textures_dir"
-    exit 0
-fi
+# better globbing - if no matches, the arrays will be empty instead of containing the pattern
+shopt -s nullglob
 
-for f in "${pngs[@]}"; do
-    "${CONVERT_CMD[@]}" "$f" -depth 8 -compress none -define ppm:format=plain "${f%.png}.ppm"
+# collect images from both directories
+images=()
+[ -d "$textures_dir" ] && for p in "$textures_dir"/*.{png,jpg,jpeg}; do images+=("$p"); done
+[ -d "$bg_dir" ] && for p in "$bg_dir"/*.{png,jpg,jpeg}; do images+=("$p"); done
+
+[ ${#images[@]} -eq 0 ] &&\
+    echo "No image files (.png/.jpg/.jpeg) found in: $textures_dir or $bg_dir" &&\
+    exit 0
+
+count=0
+for f in "${images[@]}"; do
+    outfile="${f%.*}.ppm"
+    "${CONVERT_CMD[@]}" "$f" -depth 8 -compress none -define ppm:format=plain "$outfile"
+    count=$((count + 1))
 done
 
-echo "=== Converted all png textures to ppm ==="
+echo "=== Converted $count images to .ppm ==="
