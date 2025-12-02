@@ -4,7 +4,6 @@ My first fully working ray tracer running on the CPU.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 
-<a href="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.ppm"><img src="https://github.com/leonmavr/freestyle_raytracer/releases/latest/download/output.ppm" width="500" alt="output.ppm"/></a>
 
 ## Features
 
@@ -12,6 +11,7 @@ My first fully working ray tracer running on the CPU.
 * Shadows
 * Reflection
 * Refraction
+* Various shapes (sphere, block, etc.)
 * Texture mapping on blocks
 * Moving camera
 
