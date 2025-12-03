@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Generate PPM textures
+      run: ./scripts/textures2ppm.sh
     - name: Build
       run: make
 
