@@ -17,9 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup Git LFS
+    - name: Setup git LFS, fetch LFS files
       run: |
-        sudo apt-get update -y
         sudo apt-get install -y git-lfs
         git lfs install
         git lfs fetch --all
