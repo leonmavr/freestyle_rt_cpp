@@ -14,10 +14,31 @@ My first fully working ray tracer running on the CPU.
 * Texture mapping on blocks
 * Moving camera
 
-## Build (using Make)
+## Build
 
-* A C++ compiler supporting C++17
+### Requirements
+
+* A C++ compiler supporting C++17 - set it in `Makefiles`
 * GNU Make
+* git LFS to fetch the resource files
+
+### Install git LFS
+
+To install git LFS if you haven't already:
+
+| Arch-based | Debian-based |
+|---|---|
+| `pacman -S --noconfirm git-lfs` | `apt-get install -y git-lfs` |
+
+Update LFS and fetch textures:
+
+```bash
+git lfs install
+git lfs fetch --all
+git lfs checkout
+```
+
+### Build commands
 
 Build and clean commands:
 
