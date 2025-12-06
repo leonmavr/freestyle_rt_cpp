@@ -18,7 +18,7 @@ My first fully working ray tracer running on the CPU.
 
 ### Requirements
 
-* A C++ compiler supporting C++17 - set it in `Makefiles`
+* A C++ compiler supporting C++17 - set it in `Makefile`
 * GNU Make
 * git LFS to fetch the resource files
 
