@@ -50,7 +50,8 @@ static void Read(Image& dest, const std::string &filename) {
     std::getline(file, line);
   } while (line.empty() || line[0] == '#');
   if (line != "P3")
-    throw std::runtime_error("ERROR: Not a P3 PPM file!");
+    throw std::runtime_error("ERROR: " + filename +
+                             " is not a P3 PPM file!");
 
   unsigned width = 0, height = 0, maxval = 0;
   while (true) {
