@@ -137,7 +137,6 @@ struct Quad : Object{
 struct Sphere : Object {
   float radius;
   
-  Sphere() = default;
   Sphere(const Vec3f& c, float r, const Material& mat = {}) {
     center = c;
     radius = r;
