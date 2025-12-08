@@ -218,32 +218,16 @@ struct Sphere : Object {
 };
 
 struct Block : Object {
-    Block(Vec3f center, float half_x, float half_y, float half_z,
-      const Mat3x3& mrot = {}) : half_w(half_x),
-                                   half_h(half_y),
-                                   half_d(half_z),
-                                   rot(mrot) {
-    this->center = center;
-    // CCW normalized vertices
-    const int v[8][3] = {
-      {-1, -1, -1}, { 1, -1, -1}, { 1,  1, -1}, {-1,  1, -1},
-      {-1, -1,  1}, { 1, -1,  1}, { 1,  1,  1}, {-1,  1,  1},
-    };
-    for (int i = 0; i < 8; ++i) {
-      Vec3f vscaled(v[i][0] * half_x, v[i][1] * half_y, v[i][2] * half_z);
-      vertices[i] = center + rot * vscaled;
-    }
-    axisx = (rot * Vec3f{1,0,0}).Unit();
-    axisy = (rot * Vec3f{0,1,0}).Unit();
-    axisz = (rot * Vec3f{0,0,1}).Unit();
-  }
+  Block(Vec3f center, float half_x, float half_y, float half_z,
+        const Mat3x3& mrot = {})
+        : Block(center, half_x, half_y, half_z, mrot, Material{}) {}
 
   Block(Vec3f center, float half_x, float half_y, float half_z,
         const Mat3x3& mrot,
         const Material& mat) : half_w(half_x),
-                                half_h(half_y),
-                                half_d(half_z),
-                                rot(mrot) {
+                               half_h(half_y),
+                               half_d(half_z),
+                               rot(mrot) {
     this->center = center;
     // CCW normalized vertices
     const int v[8][3] = {
