@@ -10,6 +10,8 @@
 #include <iostream>
 #include <cmath>
 
+// This is the same demo as demo01 but without loading textures from
+// in order to avoid having to fetching them (e.g with git LFS)
 int main(int argc, char** argv) {
   constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
