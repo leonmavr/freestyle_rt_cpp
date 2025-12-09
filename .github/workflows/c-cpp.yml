@@ -32,13 +32,12 @@ jobs:
     - name: Convert PPM to JPG
       run: |
         if command -v magick >/dev/null 2>&1; then
-          magick output.ppm -quality 90 output.jpg
+          magick output_demo01.ppm -quality 90 output.jpg
         elif command -v convert >/dev/null 2>&1; then
-          convert output.ppm -quality 90 output.jpg
+          convert output_demo01.ppm -quality 90 output.jpg
         fi
     - name: Upload rendered image
       uses: actions/upload-artifact@v4
       with:
         name: rendered-image
         path: output.jpg
-    
