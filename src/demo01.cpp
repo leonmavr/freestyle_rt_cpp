@@ -155,13 +155,14 @@ int main(int argc, char** argv) {
   ground.SetTexture(tex, 10, 10);
   ray_tracer.AddObject(std::move(ground));
 
-  //ray_tracer.ReadBackground("resources/bg/03.ppm");
+  ray_tracer.ReadBackground("resources/bg/01.ppm");
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
   for (auto & b : blocks)
     ray_tracer.AddObject(std::move(b));
  
-  ray_tracer.Trace(3);
+  constexpr int nreflections = 5;
+  ray_tracer.Trace(nreflections);
   ray_tracer.GammaCorrect(0.8);
   Ppm::Write(ray_tracer.image(), output_file);
 }

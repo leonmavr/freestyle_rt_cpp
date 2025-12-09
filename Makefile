@@ -1,4 +1,4 @@
-#================================================= Makefile =================================================
+#============================= Makefile =============================
 
 # Compiles the project assuming it adheres to the following structure:
 #
@@ -6,57 +6,69 @@
 # |
 # +---- <SRC_DIR> ---+---- subdir1/*.cpp, *.hpp
 # |                  +---- subdir2/*.cpp, *.hpp                       
-# |                  +---- main.cpp
+# |                  +---- demo00.cpp, demo01.cpp, ...
 #
-# All headers are now co-located with their .cpp files inside src/.
+# Build a selected demo (src/demoXX.cpp) as:
+#
+# make                 # builds default demo (demo00)
+# make DEMO=demoXX     # same as source file without the .cpp
 
 SHELL    := /bin/bash
 CXX      := g++
-EXEC     := demo 
 
 SRC_DIR  := src
-OBJ_DIR  := build
+BIN_DIR  := build
+OBJ_DIR  := build/obj
 
 # include all subdirectories in src/ (for headers)
 INCDIRS  := $(shell find $(SRC_DIR) -type d 2>/dev/null || true)
 INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 
-CXXFLAGS := $(INCLUDES) $(SDL_CFLAGS) -O3 -std=c++17 -Wall -Wextra -MMD -MP
-LDFLAGS  := -lm
+CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP
+LDFLAGS  :=
 LDLIBS   :=
 
-# all cpp files under src/
-SRCS := $(shell find $(SRC_DIR) -type f -name '*.cpp' -print)
+# demo cmd line variable (DEMO=demoXX) default value
+DEMO ?= demo00
 
-# map src/... to build/src/...
-SRC_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(SRCS))
-OBJECTS  := $(SRC_OBJS)
+IMPL_SRCS := $(shell find $(SRC_DIR) -type f -name '*.cpp' -print)
+ALL_SRCS  := $(filter-out $(SRC_DIR)/demo%.cpp ,$(IMPL_SRCS))
+ALL_OBJS  := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(ALL_SRCS))
 
-# dependency files
-DEPS := $(OBJECTS:.o=.d)
+# demo bin for src/demoXX.cpp ->  $(BIN_DIR)/demoXX
+DEMO_SRC := $(SRC_DIR)/$(DEMO).cpp
+DEMO_BIN := $(BIN_DIR)/$(DEMO)
 
-.PHONY: all clean rebuild
+# dependency files for engine objects
+DEPS := $(ALL_OBJS:.o=.d)
 
-all: $(EXEC)
-	@echo -e "\n======== Final executable at: ./$(EXEC) ========"
+.PHONY: all run clean rebuild
 
-# link everything together 
-$(EXEC): $(OBJECTS)
+# build selected demo
+all: $(DEMO_BIN)
+	@echo -e "\n======== Built demo at: $(DEMO_BIN) ========"
+
+# link the selected demo with implementation objects
+$(DEMO_BIN): $(DEMO_SRC) $(ALL_OBJS)
+	@mkdir -p $(BIN_DIR)
 	@echo -e "\n======== Linking $@ ========"
-	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(ALL_OBJS) $< -o $@ $(LDFLAGS) $(LDLIBS)
 
-# compile rules
+# compile all objects
 $(OBJ_DIR)/$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	@echo -e "\n======== Compiling $< -> $@ ========"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# include dependency info
+# dependency info for implementation objects (if headers change)
 -include $(DEPS)
+
+run: $(DEMO_BIN)
+	$(DEMO_BIN) output.ppm
 
 clean:
 	@echo -e "\n======== Cleaning build artifacts ========"
-	@rm -rf $(OBJ_DIR) $(EXEC)
+	@rm -rf build
+	@rm -f output.ppm output.jpg
 
 rebuild: clean all
-
