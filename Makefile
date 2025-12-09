@@ -65,11 +65,11 @@ $(OBJ_DIR)/$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 -include $(DEPS)
 
 run: $(DEMO_BIN)
-	$(DEMO_BIN) output.ppm
+	$(DEMO_BIN) output_$(DEMO).ppm
 
 clean:
 	@echo -e "\n======== Cleaning build artifacts ========"
 	@rm -rf build
-	@rm -f output.ppm output.jpg
+	@rm output_$(DEMO).ppm
 
 rebuild: clean all
