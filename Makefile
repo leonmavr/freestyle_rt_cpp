@@ -43,7 +43,7 @@ DEMO_BIN := $(BIN_DIR)/$(DEMO)
 # dependency files for engine objects
 DEPS := $(ALL_OBJS:.o=.d)
 
-.PHONY: all run clean rebuild
+.PHONY: all run clean rebuild convert
 
 # build selected demo
 all: $(DEMO_BIN)
@@ -66,6 +66,10 @@ $(OBJ_DIR)/$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 
 run: $(DEMO_BIN)
 	$(DEMO_BIN) output_$(DEMO).ppm
+
+convert:
+	@echo -e "\n======== Converting textures/backgrounds to PPM ========"
+	@bash scripts/textures2ppm.sh
 
 clean:
 	@echo -e "\n======== Cleaning build artifacts ========"
