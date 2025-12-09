@@ -27,10 +27,8 @@ jobs:
       run: sudo apt-get install -y imagemagick
     - name: Generate PPM textures
       run: ./scripts/textures2ppm.sh
-    - name: Build
-      run: make
-    - name: Run demo and produce an output scene
-      run: ./demo output.ppm
+    - name: Build and run
+      run: make DEMO=demo01 run
     - name: Convert PPM to JPG
       run: |
         if command -v magick >/dev/null 2>&1; then
