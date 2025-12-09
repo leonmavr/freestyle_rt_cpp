@@ -20,8 +20,9 @@ SRC_DIR  := src
 BIN_DIR  := build
 OBJ_DIR  := build/obj
 
-# include all subdirectories in src/ (for headers)
-INCDIRS  := $(shell find $(SRC_DIR) -type d 2>/dev/null || true)
+# include all directories that contain headers under src/ (plus src itself)
+rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(wildcard $d/$2))
+INCDIRS  := $(sort $(SRC_DIR) $(dir $(call rwildcard,$(SRC_DIR)/,*.hpp) $(call rwildcard,$(SRC_DIR)/,*.h)))
 INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 
 CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP
