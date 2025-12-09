@@ -80,7 +80,7 @@ struct Triangle : Object {
     if (std::abs(a) < eps)
       return {}; // ray is parallel to triangle
 
-    float ainv = 1 / a;
+    float ainv = 1/a;
     Vec3f s = ray.origin - v0;
     // barycetric coordinate 0..1 of a point along edge 1
     float u = ainv * s.Dot(h);
@@ -93,7 +93,6 @@ struct Triangle : Object {
     if (v < 0 || u + v > 1)
       return {};
     float t = ainv * edge2.Dot(q);
-    constexpr float large_t = 1e8;
     // FIXME: >< 0 based on camera's z relative to its origin
     if (t > 0) { // ray intersection
       return {ray.origin + ray.dir * t, true, t};
