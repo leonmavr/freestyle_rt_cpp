@@ -3,7 +3,7 @@
 #include "ppm_writer.hpp"
 #include "ray_tracer.hpp"
 #include "vec.hpp"
-#include "ray_tracer/materials.hpp"
+#include "material_builder.hpp"
 #include "common.hpp"
 #include <vector>
 #include <string>
@@ -59,83 +59,86 @@ int main(int argc, char** argv) {
   RayTracer ray_tracer(cam, lights);
   std::vector<Sphere> spheres;
   std::vector<Block> blocks;
-  
+
+  Material plastic = MaterialBuilder()
+                       .Color(19, 204, 237)
+                       .Specular(100.0f)
+                       .Reflective(0.8f)
+                       .Build();
+  Material glass = MaterialBuilder()
+                     .Color(255, 255, 255)
+                     .Specular(80.0f)
+                     .Reflective(0.12f)
+                     .Transparency(0.7f)
+                     .RefractiveIndex(1.5f)
+                     .Tint(0.1f)
+                     .Build();
+  Material crystal = MaterialBuilder()
+                       .Color(20, 179, 227)
+                       .Specular(90.0f)
+                       .Reflective(0.3f)
+                       .Transparency(0.85f)
+                       .RefractiveIndex(1.7f)
+                       .Tint(0.75f)
+                       .Build();
+  Material marble = MaterialBuilder()
+                      .Color(230, 230, 230)
+                      .Specular(10.0f)
+                      .Reflective(0.175f)
+                      .Transparency(0.0f)
+                      .RefractiveIndex(1.0f)
+                      .Tint(0.0f)
+                      .Build();
+
+  spheres.emplace_back(Vec3f{0, -400, 2100}, 400.0f, plastic);
   {
-    auto m = Materials::Plastic();
-    m.color = {19, 204, 237};
-    m.specular = 100.0f;
-    m.reflective = 0.8f;
-    spheres.emplace_back(Vec3f{0, -400, 2100}, 400.0f, m);
-  }
- 
-  {
-    auto m = Materials::Glass();
+    auto m = glass;
     m.color = {26, 240, 87};
-    m.tint = 0.1f;
     spheres.emplace_back(Vec3f{1100, 200, 1800}, 600.0f, m);
   }
-  
+  spheres.emplace_back(Vec3f{-1100, 200, 1800}, 600.0f, glass);
   {
-    auto m = Materials::Glass();
-    m.color = {26, 240, 87};
-    m.tint = 0.1f;
-    spheres.emplace_back(Vec3f{-1100, 200, 1800}, 600.0f, m);
-  }
- 
-  {
-    auto m = Materials::Plastic();
+    auto m = plastic;
     m.color = {240, 34, 181};
     m.reflective = 0.2f;
     spheres.emplace_back(Vec3f{-1300, -700, 5600}, 600.0f, m);
-  }
-
-  {
-    auto m = Materials::Plastic();
-    m.color = {240, 34, 181};
     m.specular = 50.0f;
     spheres.emplace_back(Vec3f{1300, -700, 5600}, 600.0f, m);
   }
-
-  {
-    auto m = Materials::Crystal();
-    m.color = {20, 179, 227};
-    m.reflective = 0.3f;
-    m.transparency = 0.55f;
-    m.tint = 0.75f;
-    spheres.emplace_back(Vec3f{-4000, 1200, 3200}, 950.0f, m);
-  }
+  spheres.emplace_back(Vec3f{-4000, 1200, 3200}, 950.0f, crystal);
   
   // pillars
   blocks.emplace_back(Vec3f{-1700, 800, 450}, 150, 700, 70, Mat3x3{},
-                      Materials::Marble());
+                      marble);
 
   blocks.emplace_back(Vec3f{1700, 800, 450}, 150, 700, 70, Mat3x3{},
-                      Materials::Marble());
+                      marble);
   // "ruin"
   {
-    auto m = Materials::Marble();
+    auto m = marble;
     m.reflective = 0.0f;
     blocks.emplace_back(Vec3f{0, 1450, 1000}, 220, 220, 180,
                         Mat3x3{0.1f, 0.3f, 0.5f}, m);
   }
   // floating rocks
   blocks.emplace_back(Vec3f{2000, -4500, 7000}, 500, 500, 400,
-                      Mat3x3{1.2f, -0.4f, 0.8f}, Materials::Marble());
+                      Mat3x3{1.2f, -0.4f, 0.8f}, marble);
   {
-    auto m = Materials::Marble();
+    auto m = marble;
     m.specular = 1.0f;
     blocks.emplace_back(Vec3f{-3500, -3200, 8000}, 350, 400, 400,
                         Mat3x3{0.3f, 0.0f, -0.6f}, m);
   }
   blocks.emplace_back(Vec3f{4500, -2600, 4000}, 180, 230, 280,
-                      Mat3x3{1.5f, 1.0f, -0.3f}, Materials::Marble());
+                      Mat3x3{1.5f, 1.0f, -0.3f}, marble);
 
   // ground
   Block ground({0, 1500, 4000}, 6500, 20, 8000);
-  ground.material.specular = 2;
-  ground.material.reflective = 0.05f;
-  ground.material.transparency = 0.1f;
-  ground.material.color = {30, 30, 30};
+  ground.material = MaterialBuilder()
+                      .Color(30, 30, 30)
+                      .Specular(2.0f)
+                      .Reflective(0.05f)
+                      .Build(); 
   ray_tracer.AddObject(std::move(ground));
 
   for (auto& s : spheres)

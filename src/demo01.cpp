@@ -3,7 +3,7 @@
 #include "ppm_writer.hpp"
 #include "ray_tracer.hpp"
 #include "vec.hpp"
-#include "ray_tracer/materials.hpp"
+#include "materials.hpp"
 #include "common.hpp"
 #include <vector>
 #include <string>
