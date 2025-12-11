@@ -3,3 +3,4 @@ resources/bg/**/*.ppm filter=lfs diff=lfs merge=lfs -text
 resources/bg/**/*.png  filter=lfs diff=lfs merge=lfs -text
 resources/bg/**/*.jpg  filter=lfs diff=lfs merge=lfs -text
 resources/bg/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
+resources/textures/**/*.ppm filter=lfs diff=lfs merge=lfs -text
