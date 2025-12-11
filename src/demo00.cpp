@@ -10,10 +10,10 @@
 #include <iostream>
 #include <cmath>
 
-// This is the same demo as demo01 but without loading textures from
-// in order to avoid having to fetching them (e.g with git LFS)
+#define USE_TEXTURES
+
 int main(int argc, char** argv) {
-  constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
+  constexpr int focal_length = 1200, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
   RayTracer ray_tracer(cam, lights);
   std::vector<Sphere> spheres;
   std::vector<Block> blocks;
-
   Material plastic = MaterialBuilder()
                        .Color(19, 204, 237)
                        .Specular(100.0f)
@@ -71,7 +70,7 @@ int main(int argc, char** argv) {
                      .Reflective(0.12f)
                      .Transparency(0.7f)
                      .RefractiveIndex(1.5f)
-                     .Tint(0.1f)
+                     .Tint(0.25f)
                      .Build();
   Material crystal = MaterialBuilder()
                        .Color(20, 179, 227)
@@ -89,6 +88,16 @@ int main(int argc, char** argv) {
                       .RefractiveIndex(1.0f)
                       .Tint(0.0f)
                       .Build();
+#ifdef USE_TEXTURES
+  auto tex_earth = std::make_shared<Image>();
+  Ppm::Read(*tex_earth, "resources/textures/earth.ppm");
+  auto tex_marble = std::make_shared<Image>();
+  Ppm::Read(*tex_marble, "resources/textures/marble_01.ppm");
+  auto tex_granite = std::make_shared<Image>(1,1);
+  Ppm::Read(*tex_granite, "resources/textures/granite.ppm");
+  auto tex_checker = std::make_shared<Image>();
+  Ppm::Read(*tex_checker, "resources/textures/checkerboard_02.ppm");
+#endif
 
   spheres.emplace_back(Vec3f{0, -400, 2100}, 400.0f, plastic);
   {
@@ -100,19 +109,28 @@ int main(int argc, char** argv) {
   {
     auto m = plastic;
     m.color = {240, 34, 181};
-    m.reflective = 0.2f;
+    m.reflective = 0.0f;
     spheres.emplace_back(Vec3f{-1300, -700, 5600}, 600.0f, m);
     m.specular = 50.0f;
+    m.reflective = 0.1f;
     spheres.emplace_back(Vec3f{1300, -700, 5600}, 600.0f, m);
+  #ifdef USE_TEXTURES
+    spheres.back().SetTexture(tex_earth);
+  #endif
   }
   spheres.emplace_back(Vec3f{-4000, 1200, 3200}, 950.0f, crystal);
   
   // pillars
   blocks.emplace_back(Vec3f{-1700, 800, 450}, 150, 700, 70, Mat3x3{},
                       marble);
-
+#ifdef USE_TEXTURES
+  blocks.back().SetTexture(tex_marble, 1, 3);
+#endif
   blocks.emplace_back(Vec3f{1700, 800, 450}, 150, 700, 70, Mat3x3{},
                       marble);
+#ifdef USE_TEXTURES
+  blocks.back().SetTexture(tex_marble, 1, 3);
+#endif
   // "ruin"
   {
     auto m = marble;
@@ -120,6 +138,9 @@ int main(int argc, char** argv) {
     blocks.emplace_back(Vec3f{0, 1450, 1000}, 220, 220, 180,
                         Mat3x3{0.1f, 0.3f, 0.5f}, m);
   }
+#ifdef USE_TEXTURES
+  blocks.back().SetTexture(tex_marble);
+#endif
   // floating rocks
   blocks.emplace_back(Vec3f{2000, -4500, 7000}, 500, 500, 400,
                       Mat3x3{1.2f, -0.4f, 0.8f}, marble);
@@ -131,22 +152,31 @@ int main(int argc, char** argv) {
   }
   blocks.emplace_back(Vec3f{4500, -2600, 4000}, 180, 230, 280,
                       Mat3x3{1.5f, 1.0f, -0.3f}, marble);
-
+#ifdef USE_TEXTURES
+  for (size_t i = blocks.size() - 3; i < blocks.size(); ++i)
+    blocks[i].SetTexture(tex_granite);
+#endif
   // ground
   Block ground({0, 1500, 4000}, 6500, 20, 8000);
   ground.material = MaterialBuilder()
                       .Color(30, 30, 30)
                       .Specular(2.0f)
-                      .Reflective(0.05f)
+                      .Reflective(0.1f)
                       .Build(); 
+#ifdef USE_TEXTURES
+  ground.SetTexture(tex_checker, 10, 10);
+#endif
   ray_tracer.AddObject(std::move(ground));
 
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
   for (auto& b : blocks)
     ray_tracer.AddObject(std::move(b));
- 
-  constexpr int nreflections = 5;
+
+#ifdef USE_TEXTURES
+  ray_tracer.ReadBackground("resources/bg/01.ppm");
+#endif
+  constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);
   ray_tracer.GammaCorrect(0.8);
   Ppm::Write(ray_tracer.image(), output_file);
