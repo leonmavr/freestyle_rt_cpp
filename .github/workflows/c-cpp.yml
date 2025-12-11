@@ -27,14 +27,14 @@ jobs:
       run: sudo apt-get install -y imagemagick
     - name: Generate PPM textures
       run: ./scripts/textures2ppm.sh
-    - name: Build and run
-      run: make DEMO=demo01 run
+    - name: Build with textures and run
+      run: make DEFINES=-DUSE_TEXTURES DEMO=demo00 run
     - name: Convert PPM to JPG
       run: |
         if command -v magick >/dev/null 2>&1; then
-          magick output_demo01.ppm -quality 90 output.jpg
+          magick output_demo00.ppm -quality 90 output.jpg
         elif command -v convert >/dev/null 2>&1; then
-          convert output_demo01.ppm -quality 90 output.jpg
+          convert output_demo00.ppm -quality 90 output.jpg
         fi
     - name: Upload rendered image
       uses: actions/upload-artifact@v4

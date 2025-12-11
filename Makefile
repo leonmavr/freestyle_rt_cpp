@@ -25,7 +25,12 @@ rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(wildcard $d/$
 INCDIRS  := $(sort $(SRC_DIR) $(dir $(call rwildcard,$(SRC_DIR)/,*.hpp) $(call rwildcard,$(SRC_DIR)/,*.h)))
 INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 
-CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP
+# DEFINES options are used to enable options such as compiling with
+# textures if textures have been fetched, e.g.:
+# make DEFINES=-DUSE_TEXTURES <target>
+DEFINES ?=
+
+CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP $(DEFINES)
 LDFLAGS  :=
 LDLIBS   :=
 
