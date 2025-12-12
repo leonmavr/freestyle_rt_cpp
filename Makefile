@@ -72,6 +72,12 @@ $(OBJ_DIR)/$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 run: $(DEMO_BIN)
 	$(DEMO_BIN) output_$(DEMO).ppm
 
+# redundant target for convenience; build with USE_TEXTURES
+.PHONY: use-textures
+use-textures:
+	@echo -e "\n======== Building with USE_TEXTURES ========"
+	@$(MAKE) --no-print-directory DEMO=$(DEMO) DEFINES="$(DEFINES) -DUSE_TEXTURES"
+
 convert:
 	@echo -e "\n======== Converting textures/backgrounds to PPM ========"
 	@bash scripts/textures2ppm.sh
