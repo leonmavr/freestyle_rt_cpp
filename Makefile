@@ -12,6 +12,7 @@
 #
 # make                 # builds default demo (demo00)
 # make DEMO=demoXX     # same as source file without the .cpp
+# make run DEMO=demoXX # build and run
 
 SHELL    := /bin/bash
 CXX      := g++
@@ -45,7 +46,7 @@ ALL_OBJS  := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(ALL_SRCS))
 DEMO_SRC := $(SRC_DIR)/$(DEMO).cpp
 DEMO_BIN := $(BIN_DIR)/$(DEMO)
 
-# dependency files for engine objects
+# dependency files for implementation objects
 DEPS := $(ALL_OBJS:.o=.d)
 
 .PHONY: all run clean rebuild convert
@@ -73,7 +74,7 @@ run: $(DEMO_BIN)
 	$(DEMO_BIN) output_$(DEMO).ppm
 
 # redundant target for convenience; build with USE_TEXTURES
-.PHONY: use-textures
+.PHONY: 
 use-textures:
 	@echo -e "\n======== Building with USE_TEXTURES ========"
 	@$(MAKE) --no-print-directory DEMO=$(DEMO) DEFINES="$(DEFINES) -DUSE_TEXTURES"

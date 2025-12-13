@@ -11,7 +11,7 @@
 #include <cmath>
 
 int main(int argc, char** argv) {
-  constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
+  constexpr int focal_length = 1200, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
   auto tex_granite = std::make_shared<Image>(1,1);
   Ppm::Read(*tex_granite, "resources/textures/granite.ppm");
   auto tex_checker = std::make_shared<Image>();
-  Ppm::Read(*tex_checker, "resources/textures/checkerboard_02.ppm");
+  Ppm::Read(*tex_checker, "resources/textures/checkerboard_01.ppm");
 #endif
 
   spheres.emplace_back(Vec3f{0, -400, 2100}, 400.0f, plastic);
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
   ground.material = MaterialBuilder()
                       .Color(30, 30, 30)
                       .Specular(2.0f)
-                      .Reflective(0.1f)
+                      .Reflective(0.2f)
                       .Build(); 
 #ifdef USE_TEXTURES
   ground.SetTexture(tex_checker, 10, 10);
