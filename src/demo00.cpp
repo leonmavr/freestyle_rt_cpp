@@ -11,7 +11,7 @@
 #include <cmath>
 
 int main(int argc, char** argv) {
-  constexpr int focal_length = 1200, fovx_deg = 120, fovy_deg = 100,
+  constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
