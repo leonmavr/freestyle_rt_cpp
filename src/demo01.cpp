@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 
+// Several glassy objects enclosed in a box
 int main(int argc, char** argv) {
   constexpr int focal_length = 900, fovx_deg = 70, fovy_deg = 60;
   Vec3f cam_center{0, -600, -400};
@@ -22,7 +23,7 @@ int main(int argc, char** argv) {
       cam_center.y = std::stof(argv[3]);
       cam_center.z = std::stof(argv[4]);
     } catch (...) {
-      std::cerr << "Invalid camera center args; using defaults."
+      std::cerr << "Invalid camera center, using defaults."
                 << std::endl;
     }
   }
@@ -33,7 +34,7 @@ int main(int argc, char** argv) {
       float rz = Deg2Rad(std::stof(argv[7]));
       cam_rot = Mat3x3(rx, ry, rz);
     } catch (...) {
-      std::cerr << "Invalid camera rotation args; using defaults."
+      std::cerr << "Invalid camera rotation, using defaults"
                 << std::endl;
     }
   }

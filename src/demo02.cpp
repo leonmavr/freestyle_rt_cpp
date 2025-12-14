@@ -10,6 +10,8 @@
 #include <sstream>
 #include <iostream>
 
+// Minimally renders .obj files
+
 // Minimal OBJ loader: supports ONLY v (positions) and f (faces, aka
 // triangles).
 // Normals and textures are ignored, quads are triangulated i.e. split
@@ -102,7 +104,7 @@ int main(int argc, char** argv) {
       float rz = Deg2Rad(std::stof(argv[8]));
       cam_rot = Mat3x3(rx, ry, rz);
     } catch (...) {
-      std::cerr << "Invalid rotation; using defaults."
+      std::cerr << "Invalid camera rotation, using defaults."
                 << std::endl;
     }
   }

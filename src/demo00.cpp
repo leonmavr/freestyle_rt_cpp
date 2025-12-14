@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cmath>
 
+// Challenging scene testing all of the capabilities of the ray tracer
 int main(int argc, char** argv) {
   constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
@@ -28,7 +29,7 @@ int main(int argc, char** argv) {
       cam_center.y = std::stof(argv[3]);
       cam_center.z = std::stof(argv[4]);
     } catch (...) {
-      std::cerr << "Invalid camera center arguments, using defaults"
+      std::cerr << "Invalid camera center, using defaults."
                 << std::endl;
     }
   }
@@ -40,7 +41,7 @@ int main(int argc, char** argv) {
       float rz = Deg2Rad(std::stof(argv[7]));
       cam_rot = Mat3x3(rx, ry, rz);
     } catch (...) {
-      std::cerr << "Invalid camera rotation arguments, using defaults"
+      std::cerr << "Invalid camera rotation, using defaults."
                 << std::endl;
     }
   }
