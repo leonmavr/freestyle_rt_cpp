@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [ "master" ]
 
-# Creating/releases requires write access to repository contents
-permissions:
-  contents: write
-
 jobs:
   build:
 
@@ -28,7 +24,7 @@ jobs:
     - name: Generate PPM textures
       run: ./scripts/textures2ppm.sh
     - name: Build with textures and run
-      run: make DEFINES=-DUSE_TEXTURES DEMO=demo00 run
+      run: make use-textures DEMO=demo00 run
     - name: Convert PPM to JPG
       run: |
         if command -v magick >/dev/null 2>&1; then
