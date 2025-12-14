@@ -1,29 +1,64 @@
-# freestyle_rt_cpp
+# Freestyle raytracer
 
 My first fully working ray tracer running on the CPU.
+
+I wrote it by relying on various sources and my own intuition, hence the name.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 
 ## Features
 
-* Phong lighting model (embient, diffuse, specular light).
+* Phong lighting model (ambient, diffuse, specular light)
 * Shadows
-* Reflection
-* Refraction
-* Various shapes (sphere, block, etc.)
-* Texture mapping on blocks
+* Reflection and  refraction
+* Various solids and shapes (sphere, block, quad, triangle)
+* Texture mapping
 * Moving camera
+* Misc: background image, gamma correction
 
-## Build
+Future ideas:
+- [ ] Render .obj files
+- [ ] Custom background color
+- [ ] Fuzziness
 
-### Requirements
 
-* A C++ compiler supporting C++17 - set it in `Makefile`
-* GNU Make
-* git LFS to fetch the resource files
+## Build instructions
 
-### Install git LFS
+You can build this project with or without (by default) textures.
 
+You will need GNU make (`make`) and a C++17 compiler.
+
+Optionally (to render textures), you will need `imagemagick` to convert
+the pre-rendered textures to .ppm.
+
+### Without textures
+
+Each demo is found at `src/demoXX.cpp`. The binaries are found at
+`build/demoXX`. To target a specific demo, set make's `DEMO` variable
+(by default demo00). You can execute:
+
+```
+make                 # by default builds demo00
+make run             # by default builds and runs demo00
+make DEMO=demo01     # change the target to demo01
+make run DEMO=demo01 # build and run demo01
+```
+You can run it manually as:
+```
+./build/demoXX
+```
+Demo files also accept command like arguments, such as the camera position and rotation - read their source for more.
+
+Other commands:
+```
+make clean            # remove objects and executables
+make rebuild          # clean and build
+```
+The outputs are generated as .ppm files.
+
+### With textures
+
+Texture files are large so first you will need to fetch them from git LFS.
 To install git LFS if you haven't already:
 
 | Arch-based | Debian-based |
@@ -38,25 +73,16 @@ git lfs fetch --all
 git lfs checkout
 ```
 
-### Build commands
+At this stage, most files will be fetched as jpg/png. You will need `imagemagick` installed 
+to convert them to .ppm, so with `imagemagick` installed run:
 
-Build and clean commands:
-
-```bash
-# build the demo executable
-make
-# remove build artifacts and the executable
-make clean
-# clean then build
-make rebuild
 ```
-You can run the executable from the project root as follows.
-
-```bash
-./demo
+make convert # calls ./scripts/textures2ppm.sh
 ```
+Then you can continue by following the instructions from the previous subsection.
 
-The output will be written in a .ppm file, as defined in `src/main.cpp`.
+If you're having trouble, you can refer to how the
+[CI pipeline](https://github.com/leonmavr/freestyle_raytracer/blob/master/.github/workflows/c-cpp.yml) does it.
 
 ## Gallery
 
@@ -71,3 +97,4 @@ The output will be written in a .ppm file, as defined in `src/main.cpp`.
 2. [refraction - de Greve](https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf)
 3. [Fresnel equations derivation](http://physics.gmu.edu/~ellswort/p263/feqn.pdf)
 4. [Pfister's slides](https://www.doc.ic.ac.uk/~dfg/graphics/graphics2010/GraphicsSlides11.pdf)
+5. [D. Sokolov's tinyraytracer](https://github.com/ssloy/tinyraytracer)
