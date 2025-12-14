@@ -22,7 +22,8 @@ int main(int argc, char** argv) {
       cam_center.y = std::stof(argv[3]);
       cam_center.z = std::stof(argv[4]);
     } catch (...) {
-      std::cerr << "Invalid camera center args; using defaults." << std::endl;
+      std::cerr << "Invalid camera center args; using defaults."
+                << std::endl;
     }
   }
   if (argc >= 8) {
@@ -32,7 +33,8 @@ int main(int argc, char** argv) {
       float rz = Deg2Rad(std::stof(argv[7]));
       cam_rot = Mat3x3(rx, ry, rz);
     } catch (...) {
-      std::cerr << "Invalid camera rotation args; using defaults." << std::endl;
+      std::cerr << "Invalid camera rotation args; using defaults."
+                << std::endl;
     }
   }
   Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
@@ -79,16 +81,21 @@ int main(int argc, char** argv) {
     ray_tracer.AddObject(std::move(s));
 
   std::vector<Block> blocks;
-  blocks.emplace_back(Vec3f{250, -100, 1100}, 200, 300, 100, Mat3x3{-0.65f, 0.35f, 0.2f}, 
-    MaterialBuilder().Specular(50).Reflective(0.3f).Transparency(0.45f).RefractiveIndex(1.3f).Tint(0.2f).Build());
-  blocks.emplace_back(Vec3f{0, 0, 2000}, 400, 250, 100, Mat3x3{0.2f, -0.9f, 0.3f}, 
-    MaterialBuilder().Color(235, 206, 23).Specular(150).Reflective(0.7f).Transparency(0.0f).Tint(0.1f).Build());
+  blocks.emplace_back(Vec3f{250, -100, 1100}, 200, 300, 100,
+    Mat3x3{-0.65f, 0.35f, 0.2f}, MaterialBuilder().Specular(50)
+    .Reflective(0.3f).Transparency(0.45f).RefractiveIndex(1.3f)
+    .Tint(0.2f).Build());
+  blocks.emplace_back(Vec3f{0, 0, 2000}, 400, 250, 100,
+    Mat3x3{0.2f, -0.9f, 0.3f}, MaterialBuilder()
+    .Color(235, 206, 23).Specular(150).Reflective(0.7f)
+    .Transparency(0.0f).Tint(0.1f).Build());
   {
     Material m = crystal;
     m.color = {0, 255, 30};
     m.tint = 0.8;
     m.specular = 20;
-    blocks.emplace_back(Vec3f{400, -300, 1400}, 100, 150, 100, Mat3x3{}, m);
+    blocks.emplace_back(Vec3f{400, -300, 1400}, 100, 150, 100,
+      Mat3x3{}, m);
   }
   {
     Material m = glass;
@@ -96,7 +103,8 @@ int main(int argc, char** argv) {
     m.transparency = 0.0f;
     m.specular = 40;
     m.reflective = 0.5f;
-    blocks.emplace_back(Vec3f{0, 0, 0}, 16000, 6000, 6000, Mat3x3{}, m);
+    blocks.emplace_back(Vec3f{0, 0, 0}, 16000, 6000, 6000, Mat3x3{},
+      m);
   }
   for (auto& b : blocks)     
     ray_tracer.AddObject(std::move(b));
