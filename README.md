@@ -1,7 +1,6 @@
 # Freestyle raytracer
 
-My first fully working ray tracer running on the CPU.
-
+My first fully working ray tracer running on the CPU.  
 I wrote it by relying on various sources and my own intuition, hence the name.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
@@ -58,6 +57,7 @@ The outputs are generated as .ppm files.
 
 ### With textures
 
+demo00 can be run with texture mapping enabled.
 Texture files are large so first you will need to fetch them from git LFS.
 To install git LFS if you haven't already:
 
@@ -79,7 +79,11 @@ to convert them to .ppm, so with `imagemagick` installed run:
 ```
 make convert # calls ./scripts/textures2ppm.sh
 ```
-Then you can continue by following the instructions from the previous subsection.
+Then you can continue by following the instructions from the previous subsection but with `use-textures` appended to the arguments, i.e.:
+
+```
+make run use-textures
+```
 
 If you're having trouble, you can refer to how the
 [CI pipeline](https://github.com/leonmavr/freestyle_raytracer/blob/master/.github/workflows/c-cpp.yml) does it.
