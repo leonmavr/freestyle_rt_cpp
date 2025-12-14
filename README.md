@@ -1,7 +1,7 @@
 # Freestyle raytracer
 
 My first fully working ray tracer running on the CPU.  
-I wrote it by relying on various sources and my own intuition, hence the name.
+I wrote it by relying on various sources without faithfully following any source and on my own intuition - hence the name.
 
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 
