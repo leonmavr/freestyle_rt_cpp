@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
       std::cerr << "Invalid camera rotation args; using defaults." << std::endl;
     }
   }
-
   Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
 
   Lights lights;
@@ -47,26 +46,35 @@ int main(int argc, char** argv) {
   lights.AddDir(0.6, 0.3, -0.1, -0.3);
   RayTracer ray_tracer(cam, lights);
 
+  Material glass = MaterialBuilder()
+                    .Color(255, 255, 255)
+                    .Specular(60.0f)
+                    .Reflective(0.3f)
+                    .Transparency(0.6f)
+                    .RefractiveIndex(1.25f)
+                    .Tint(0.25f)
+                    .Build();
+  Material crystal = MaterialBuilder()
+                      .Color(255, 255, 255)
+                      .Specular(80.0f)
+                      .Reflective(0.4f)
+                      .Transparency(0.7f)
+                      .RefractiveIndex(1.5f)
+                      .Tint(0.25f)
+                      .Build();
+
   std::vector<Sphere> spheres;
-
   spheres.emplace_back(Vec3f{-600, -200, 1500}, 300,
-    MaterialBuilder().Color(0, 255, 0).Specular(5).Reflective(0.25f).Transparency(0.0f).Build());
-
-  spheres.emplace_back(Vec3f{160, 190, 500}, 100,
-    MaterialBuilder().Specular(20).Reflective(0.3f).Transparency(0.5f)
-                     .RefractiveIndex(1.3f).Tint(0.2f).Build());
-
-  spheres.emplace_back(Vec3f{-300, 400, 2000}, 250,
-    MaterialBuilder().Color(255, 255, 0).Specular(20).Reflective(0.7f)
-                      .Transparency(0.4f).RefractiveIndex(1.4f)
-                      .Tint(0.1f).Build());
-
-  spheres.emplace_back(Vec3f{400, -300, 1600}, 200,
-    MaterialBuilder().Color(200, 0, 200).Specular(20).Reflective(0.4f).Transparency(0.7f).RefractiveIndex(1.5f).Build());
-
-  spheres.emplace_back(Vec3f{0, 0, 4800}, 1800,
-    MaterialBuilder().Color(180, 190, 200).Specular(80).Build());
-
+    MaterialBuilder().Color(232, 21, 95).Specular(5).Reflective(0.25f)
+                     .Transparency(0.0f).Build());
+  spheres.emplace_back(Vec3f{160, 190, 500}, 100, glass);
+  {
+    Material m = crystal;
+    m.color = {34, 235, 23};
+    m.specular = 20;
+    m.transparency = 0.5f;
+    spheres.emplace_back(Vec3f{-300, 400, 2000}, 250, m);
+  }
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
 
@@ -74,11 +82,27 @@ int main(int argc, char** argv) {
   blocks.emplace_back(Vec3f{250, -100, 1100}, 200, 300, 100, Mat3x3{-0.65f, 0.35f, 0.2f}, 
     MaterialBuilder().Specular(50).Reflective(0.3f).Transparency(0.45f).RefractiveIndex(1.3f).Tint(0.2f).Build());
   blocks.emplace_back(Vec3f{0, 0, 2000}, 400, 250, 100, Mat3x3{0.2f, -0.9f, 0.3f}, 
-    MaterialBuilder().Color(255, 0, 0).Specular(150).Reflective(0.7f).Transparency(0.0f).Tint(0.1f).Build());
+    MaterialBuilder().Color(235, 206, 23).Specular(150).Reflective(0.7f).Transparency(0.0f).Tint(0.1f).Build());
+  {
+    Material m = crystal;
+    m.color = {0, 255, 30};
+    m.tint = 0.8;
+    m.specular = 20;
+    blocks.emplace_back(Vec3f{400, -300, 1400}, 100, 150, 100, Mat3x3{}, m);
+  }
+  {
+    Material m = glass;
+    m.color = {40, 15, 60};
+    m.transparency = 0.0f;
+    m.specular = 40;
+    m.reflective = 0.5f;
+    blocks.emplace_back(Vec3f{0, 0, 0}, 16000, 6000, 6000, Mat3x3{}, m);
+  }
   for (auto& b : blocks)     
     ray_tracer.AddObject(std::move(b));
 
-  ray_tracer.Trace(3);
-  ray_tracer.GammaCorrect(0.7f);
+  constexpr int nreflections = 4;
+  ray_tracer.Trace(nreflections);
+  ray_tracer.GammaCorrect(0.8f);
   Ppm::Write(ray_tracer.image(), output_file);
 }
