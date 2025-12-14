@@ -38,7 +38,7 @@ LDLIBS   :=
 # demo cmd line variable (DEMO=demoXX) default value
 DEMO ?= demo00
 
-IMPL_SRCS := $(shell find $(SRC_DIR) -type f -name '*.cpp' -print)
+IMPL_SRCS := $(call rwildcard,$(SRC_DIR)/,*.cpp)
 ALL_SRCS  := $(filter-out $(SRC_DIR)/demo%.cpp ,$(IMPL_SRCS))
 ALL_OBJS  := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(ALL_SRCS))
 
@@ -86,6 +86,5 @@ convert:
 clean:
 	@echo -e "\n======== Cleaning build artifacts ========"
 	@rm -rf build
-	@rm output_$(DEMO).ppm
 
 rebuild: clean all
