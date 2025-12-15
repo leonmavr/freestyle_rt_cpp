@@ -138,15 +138,11 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
                                0.0f, 1.0f);
   float mat_refl = std::clamp(ret.obj->material.reflective,
                               0.0f, 1.0f);
-
   // direct lighting (surface shading) from diffuse and specular light
   Vec3u8 direct = lights_.ColorAt(objects_, *ret.obj, ret.hit_point,
                                   camera_);
-  // transparency reduces the brightness
-  direct.x *= (1 - mat_trans);
-  direct.y *= (1 - mat_trans);
-  direct.z *= (1 - mat_trans);
-
+  // reflectiveness reduces the direct light's brightness
+  direct *= (1.0f - mat_refl);
   // no need for more ray bounces (base case), only direct ligting 
   if (depth <= 0 || (mat_refl < eps && mat_trans < eps)) {
     ret.color = direct;
@@ -228,33 +224,24 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   return ret;
 }
 
-// map ray direction to background image using equirectangular mapping
+// map ray direction to a portion of the background image using
+// equirectangular mapping
 Vec3u8 RayTracer::SampleBackground(const Vec3f& dir_world) const {
   if (!has_background_) return {0,0,0};
-  // compute camera basis (world) for background sampling
-  auto corners = camera_.CornersWorld();
-  const Vec3f& world_tl = corners[0];
-  const Vec3f& world_tr = corners[1];
-  const Vec3f& world_bl = corners[2];
-  Vec3f cam_right = (world_tr - world_tl).Unit();
-  Vec3f cam_up = (world_bl - world_tl).Unit();
-  Vec3f cam_forward = (camera_.Unproject(0, 0) - camera_.center()).Unit();
-  // express direction in camera space (project to camera axes)
-  float x = dir_world.Dot(cam_right);
-  float y = dir_world.Dot(cam_up);
-  float z = dir_world.Dot(cam_forward);
-  // yaw in [-180,180], pitch in [-90,90]
-  float yaw_deg = std::atan2(x, z) * 180.0f /
-                  static_cast<float>(M_PI);
-  float pitch_deg = std::atan2(y, std::sqrt(x*x + z*z)) * 180.0f /
-                    static_cast<float>(M_PI);
-  // map to [0,1) x [0,1]
-  float u = (yaw_deg + 180) / 360; // wrap horizontally
-  // wrap u to [0,1)
+  // map the area  that rays catpure (in world coords) to background
+  // image
+  float x = dir_world.x;
+  float y = dir_world.y;
+  float z = dir_world.z;
+  // yaw in [-pi, pi], pitch in [-pi/2, pi/2]
+  float yaw = std::atan2(x, z);
+  float pitch = std::atan2(y, std::sqrt(x*x + z*z));
+  // map to [0,1) x [0,1] with u wraparound at 2*ou
+  float u = (yaw + static_cast<float>(M_PI)) / (2.0f * static_cast<float>(M_PI));
   u = std::fmod(u, 1.0f);
-  if (u < 0.0f) u += 1;
-  // flip vertical mapping
-  float v = (pitch_deg + 90) / 180; // 0 = top, 1 = bottom
+  if (u < 0.0f) u += 1.0f;
+  // v maps [-pi/2, pi/2] to [0,1]
+  float v = (pitch + static_cast<float>(M_PI) * 0.5f) / static_cast<float>(M_PI);
   v = std::clamp(v, 0.0f, 1.0f);
   // convert to pixel indices (nearest neighbor)
   unsigned w = background_.width;

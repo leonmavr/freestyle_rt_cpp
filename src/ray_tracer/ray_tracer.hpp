@@ -89,11 +89,7 @@ private:
   // image buffer to store the final colors
   Image image_;
   Lights& lights_;
-  // cached camera basis for mapping rays to background image
-  Vec3f cam_right_{};
-  Vec3f cam_up_{};
-  Vec3f cam_forward_{};
-  // spherical background
+  // unprojected background panorama image
   Image background_{};
   bool has_background_{false};
 };
