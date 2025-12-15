@@ -8,15 +8,14 @@ I wrote it by relying on various sources without faithfully following any source
 ## Features
 
 * Phong lighting model (ambient, diffuse, specular light)
-* Shadows
+* Shadows with softness heuristics
 * Reflection and  refraction
 * Various solids and shapes (sphere, block, quad, triangle)
 * Texture mapping
 * Moving camera
-* Misc: background image, gamma correction
+* Misc: background image, gamma correction, minimal rendering of OBJ files
 
 Future ideas:
-- [ ] Render .obj files
 - [ ] Custom background color
 - [ ] Fuzziness
 
@@ -87,6 +86,16 @@ make run use-textures
 
 If you're having trouble, you can refer to how the
 [CI pipeline](https://github.com/leonmavr/freestyle_raytracer/blob/master/.github/workflows/c-cpp.yml) does it.
+
+## Demo scenes
+
+* `demo00`: Challenging scene with objects floating above a plane, overlap
+  between an object and the plane, various materials, reflectivities and
+  transparencies. Textures can be toggled.
+* `demo01`: Smaller scene with objects enclosed in a huge box - look around and you will see
+  reflections on the walls.
+* `demo02`: minimal .obj file renderer. Note that it only handles vertices and
+  faces, ignoring normals and textures.
 
 ## Gallery
 
