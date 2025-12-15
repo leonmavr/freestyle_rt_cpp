@@ -21,17 +21,12 @@ void RayTracer::Trace(int max_reflections) {
   // centerd at origin
   Vec3f span_h = world_tr - world_tl;
   Vec3f span_v = world_bl - world_tl;
-  // TODO: cam_forward_, cam_right_, cam_up_ are only needed for
-  // background sampling -> move them there
-  // unit forward, right, and up unprojection span vectors (world)
-  cam_forward_ = (camera_.Unproject(0, 0) - camera_.center()).Unit();
-  cam_right_ = (world_tr - world_tl).Unit();
-  cam_up_ = (world_bl - world_tl).Unit();
+  // background sampling uses camera basis; compute it lazily there
   int w = camera_.width();
-  int h = camera_.height();
   for (int col = 0; col < w; ++col) {
     // normalized column coordinate
     float u = static_cast<float>(col) / static_cast<float>(w - 1);
+    int h = camera_.height();
     for (int row = 0; row < h; ++row) {
       float v = static_cast<float>(row) / static_cast<float>(h - 1);
       // bilinear point on the (possibly rotated) image plane
@@ -103,7 +98,7 @@ std::pair<bool, Vec3f> RayTracer::Refract(const Vec3f &incident,
                                           float eta,
                                           float cosi) const {
   float k = 1.0f - eta * eta * (1.0f - cosi * cosi);
-  if (k < 0.0f) return {true, {}}; // TIR
+  if (k < 0.0f) return {true, {}}; // TIR (total internal reflection)
   float cost = std::sqrt(std::max(0.0f, k));
   // formula for trasnmitted (refracted) ray
   Vec3f trans = (incident * eta + N * (eta * cosi - cost)).Unit();
@@ -236,10 +231,18 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
 // map ray direction to background image using equirectangular mapping
 Vec3u8 RayTracer::SampleBackground(const Vec3f& dir_world) const {
   if (!has_background_) return {0,0,0};
+  // compute camera basis (world) for background sampling
+  auto corners = camera_.CornersWorld();
+  const Vec3f& world_tl = corners[0];
+  const Vec3f& world_tr = corners[1];
+  const Vec3f& world_bl = corners[2];
+  Vec3f cam_right = (world_tr - world_tl).Unit();
+  Vec3f cam_up = (world_bl - world_tl).Unit();
+  Vec3f cam_forward = (camera_.Unproject(0, 0) - camera_.center()).Unit();
   // express direction in camera space (project to camera axes)
-  float x = dir_world.Dot(cam_right_);
-  float y = dir_world.Dot(cam_up_);
-  float z = dir_world.Dot(cam_forward_);
+  float x = dir_world.Dot(cam_right);
+  float y = dir_world.Dot(cam_up);
+  float z = dir_world.Dot(cam_forward);
   // yaw in [-180,180], pitch in [-90,90]
   float yaw_deg = std::atan2(x, z) * 180.0f /
                   static_cast<float>(M_PI);
