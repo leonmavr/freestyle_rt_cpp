@@ -77,6 +77,7 @@ public:
     Mat3x3 mat(dx_rad, dy_rad, dz_rad);
     rot_ = mat * rot_;
   }
+  float focal_length() const { return focal_length_; }
 
 private:
   // center of projection
