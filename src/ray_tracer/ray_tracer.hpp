@@ -89,7 +89,13 @@ private:
   // image buffer to store the final colors
   Image image_;
   Lights& lights_;
-  // unprojected background panorama image
+  // how much to scale the eps of a normal to avoid self-intersection
+  static constexpr const float eps_factor = 40.0;
+  // cached camera basis for mapping rays to background image
+  Vec3f cam_right_{};
+  Vec3f cam_up_{};
+  Vec3f cam_forward_{};
+  // spherical background
   Image background_{};
   bool has_background_{false};
 };

@@ -21,12 +21,17 @@ void RayTracer::Trace(int max_reflections) {
   // centerd at origin
   Vec3f span_h = world_tr - world_tl;
   Vec3f span_v = world_bl - world_tl;
-  // background sampling uses camera basis; compute it lazily there
+  // TODO: cam_forward_, cam_right_, cam_up_ are only needed for
+  // background sampling -> move them there
+  // unit forward, right, and up unprojection span vectors (world)
+  cam_forward_ = (camera_.Unproject(0, 0) - camera_.center()).Unit();
+  cam_right_ = (world_tr - world_tl).Unit();
+  cam_up_ = (world_bl - world_tl).Unit();
   int w = camera_.width();
+  int h = camera_.height();
   for (int col = 0; col < w; ++col) {
     // normalized column coordinate
     float u = static_cast<float>(col) / static_cast<float>(w - 1);
-    int h = camera_.height();
     for (int row = 0; row < h; ++row) {
       float v = static_cast<float>(row) / static_cast<float>(h - 1);
       // bilinear point on the (possibly rotated) image plane
@@ -60,12 +65,11 @@ void RayTracer::ReadBackground(const std::string& filename) {
   has_background_ = (background_.width > 0 && background_.height > 0);
 }
 
-// probe the index of refraction (IOR) of the surrounding medium
 float RayTracer::SurroundingIOR(const Vec3f& where,
                                 const Object* self,
                                 const Vec3f& outward_normal) const {
-  Vec3f probe = where + outward_normal * eps_normal;
-  float ret = 1.0f; // 1 is the IOR of air
+  Vec3f probe = where + outward_normal * eps * eps_factor;
+  float ret = 1.0f; // default is air
   for (const auto& other : objects_) {
     if (other.get() == self) continue;
     if (other->IsInside(probe)) {
@@ -97,8 +101,9 @@ std::pair<bool, Vec3f> RayTracer::Refract(const Vec3f &incident,
                                           const Vec3f &N,
                                           float eta,
                                           float cosi) const {
+  //cosi = -N.Dot(incident);
   float k = 1.0f - eta * eta * (1.0f - cosi * cosi);
-  if (k < 0.0f) return {true, {}}; // TIR (total internal reflection)
+  if (k < 0.0f) return {true, {}}; // TIR
   float cost = std::sqrt(std::max(0.0f, k));
   // formula for trasnmitted (refracted) ray
   Vec3f trans = (incident * eta + N * (eta * cosi - cost)).Unit();
@@ -138,11 +143,15 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
                                0.0f, 1.0f);
   float mat_refl = std::clamp(ret.obj->material.reflective,
                               0.0f, 1.0f);
+
   // direct lighting (surface shading) from diffuse and specular light
   Vec3u8 direct = lights_.ColorAt(objects_, *ret.obj, ret.hit_point,
                                   camera_);
-  // reflectiveness reduces the direct light's brightness
-  direct *= (1.0f - mat_refl);
+  // transparency reduces the brightness
+  direct.x *= (1 - mat_trans);
+  direct.y *= (1 - mat_trans);
+  direct.z *= (1 - mat_trans);
+
   // no need for more ray bounces (base case), only direct ligting 
   if (depth <= 0 || (mat_refl < eps && mat_trans < eps)) {
     ret.color = direct;
@@ -161,7 +170,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   Ray ray_refl{{}, {}};
   ray_refl.dir = inc.ReflectAbout(ori.normal);
   // offset slightly along the normal to avoid self-intersection
-  ray_refl.origin = ret.hit_point + ori.normal * eps_normal;
+  ray_refl.origin = ret.hit_point + ori.normal * eps * eps_factor;
   // -----> child ray (1): reflection
   Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
 
@@ -170,11 +179,10 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   //------------------------------------------------------------------
   // Fresnel blending via Schlik approximation for the weights
   float R_fresnel = Schlick(n1, n2, cos_i);
-  // (1 - R) * trans = fraction that got trasnmitted (refracted)
+  // (1 - R) * trans = fraction that got trasnmitted
   float trans_weight = mat_trans * (1.0f - R_fresnel);
   // R * trans = fraction that got reflected instead of refracted
   float refl_weight = mat_refl + R_fresnel * mat_trans;
-  // check for total internal reflection
   bool tir = false;
   Vec3u8 refr_color{0, 0,0};
   if (mat_trans > eps) {
@@ -182,7 +190,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
     tir = is_tir;
     if (!tir) {
       Ray refr_ray{{}, {}};
-      refr_ray.origin = ret.hit_point + refr_dir * eps_normal;
+      refr_ray.origin = ret.hit_point + refr_dir * eps * eps_factor;
       refr_ray.dir = refr_dir;
       // -----> child ray (2): refraction
       refr_color = TraceRay(refr_ray, depth - 1, n2).color;
@@ -224,23 +232,28 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   return ret;
 }
 
-// map ray direction to a portion of the background image using
-// equirectangular mapping
+// Compute a far sample world point along the ray from the current
+// camera center,
+// -> map that point's two spherical angles with wrapping
+// -> map (scale) those those to background pixel coordinates
 Vec3u8 RayTracer::SampleBackground(const Vec3f& dir_world) const {
   if (!has_background_) return {0,0,0};
-  // map the area  that rays catpure (in world coords) to background
-  // image
-  float x = dir_world.x;
-  float y = dir_world.y;
-  float z = dir_world.z;
+  // heuristic: choose a point n*focal_length times away in the
+  // world's direction to set it as parallax; the larger the n,
+  // the less sensitive the background to translation
+  const float z_parallax = 15 * camera_.focal_length();
+  Vec3f sample_world = camera_.center() + dir_world * z_parallax;
+  // Convert the world point to spherical angles relative to world origin.
+  float x = sample_world.x;
+  float y = sample_world.y;
+  float z = sample_world.z;
   // yaw in [-pi, pi], pitch in [-pi/2, pi/2]
   float yaw = std::atan2(x, z);
   float pitch = std::atan2(y, std::sqrt(x*x + z*z));
-  // map to [0,1) x [0,1] with u wraparound at 2*ou
+  // map to [0,1) x [0,1] with horizontal wrap
   float u = (yaw + static_cast<float>(M_PI)) / (2.0f * static_cast<float>(M_PI));
   u = std::fmod(u, 1.0f);
   if (u < 0.0f) u += 1.0f;
-  // v maps [-pi/2, pi/2] to [0,1]
   float v = (pitch + static_cast<float>(M_PI) * 0.5f) / static_cast<float>(M_PI);
   v = std::clamp(v, 0.0f, 1.0f);
   // convert to pixel indices (nearest neighbor)
