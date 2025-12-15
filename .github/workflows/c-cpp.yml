@@ -3,9 +3,18 @@ name: C/C++ CI
 on:
   push:
     branches: [ "master" ]
+    paths-ignore:
+      - '*README*'
+      - 'gallery/**'
+      - 'LICENSE*'
+      - '.editor*'
   pull_request:
     branches: [ "master" ]
-
+    paths-ignore:
+      - '*README*'
+      - 'gallery/**'
+      - 'LICENSE*'
+      - '.editor*'
 jobs:
   build:
 

@@ -22,6 +22,9 @@ Future ideas:
 
 ## Build instructions
 
+<details>
+<summary>Show build and textures instructions</summary>
+
 You can build this project with or without (by default) textures.
 
 You will need GNU make (`make`) and a C++17 compiler.
@@ -86,6 +89,8 @@ make run use-textures
 
 If you're having trouble, you can refer to how the
 [CI pipeline](https://github.com/leonmavr/freestyle_raytracer/blob/master/.github/workflows/c-cpp.yml) does it.
+
+</details>
 
 ## Demo scenes
 
