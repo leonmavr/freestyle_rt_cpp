@@ -77,29 +77,31 @@ LoadObjTriangles(const std::string& path,const Material& mat,
 
 
 int main(int argc, char** argv) {
-  constexpr int focal_length = 180, fovx_deg = 120, fovy_deg = 120;
-  Vec3f cam_center{0, 600, -1200};
-  Mat3x3 cam_rot{0.4f, 0.0f, M_PI};
+  constexpr int focal_length = 300, fovx_deg = 120, fovy_deg = 120;
+  Vec3f cam_center{0, 0, -1500};
+  Mat3x3 cam_rot{0.0f, 0.0f, M_PI};
   std::string output_file = "output.ppm";
   std::string obj_path = "resources/teapot.obj";
 
   if (argc > 1 && argv[1] != nullptr)
     output_file = std::string(argv[1]);
-  if (argc >= 5) {
+  if (argc >= 3 && argv[2] != nullptr)
+    obj_path = std::string(argv[2]);
+  if (argc >= 6) {
     try {
-      cam_center.x = std::stof(argv[2]);
-      cam_center.y = std::stof(argv[3]);
-      cam_center.z = std::stof(argv[4]);
+      cam_center.x = std::stof(argv[3]);
+      cam_center.y = std::stof(argv[4]);
+      cam_center.z = std::stof(argv[5]);
     } catch (...) {
       std::cerr << "Invalid camera center, using defaults."
                 << std::endl;
     }
   }
-  if (argc >= 8) {
+  if (argc >= 9) {
     try {
-      float rx = Deg2Rad(std::stof(argv[5]));
-      float ry = Deg2Rad(std::stof(argv[6]));
-      float rz = Deg2Rad(std::stof(argv[7]));
+      float rx = Deg2Rad(std::stof(argv[6]));
+      float ry = Deg2Rad(std::stof(argv[7]));
+      float rz = Deg2Rad(std::stof(argv[8]));
       cam_rot = Mat3x3(rx, ry, rz);
     } catch (...) {
       std::cerr << "Invalid camera rotation, using defaults."
@@ -116,14 +118,14 @@ int main(int argc, char** argv) {
   RayTracer ray_tracer(cam, lights);
 
   // same sample material for all OBJ triangle elements
-  Material porcelain = MaterialBuilder()
-                      .Color(220, 220, 240)
-                      .Specular(40.0f)
-                      .Reflective(0.2f)
-                      .Transparency(0.0f)
-                      .Build();
+  Material mat = MaterialBuilder()
+                   .Color(220, 220, 240)
+                   .Specular(40.0f)
+                   .Reflective(0.2f)
+                   .Transparency(0.0f)
+                   .Build();
 
-  auto tris = LoadObjTriangles(obj_path, porcelain);
+  auto tris = LoadObjTriangles(obj_path, mat);
   if (tris.empty()) {
     std::cerr << "No triangles loaded from " << obj_path << std::endl;
     return -1;
