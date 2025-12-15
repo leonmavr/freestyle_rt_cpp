@@ -6,10 +6,10 @@
 #include <vector>
 
 // error tolerance
-const float eps = 1e-3f;
-
-template <typename T>
-T Lerp(T from, T to, float t) { return (1 - t)*from + t*to; }
+inline constexpr float eps = 1e-3f;
+// how much to extend a normal to avoid self-intesection/probe other
+// materials; N becomes (1 + eps_normal)N
+inline constexpr float eps_normal = 5e-2f;
 
 // linearly map x from range [a, b] to [c, d]
 template <typename T>

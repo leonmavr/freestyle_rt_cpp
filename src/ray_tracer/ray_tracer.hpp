@@ -89,8 +89,6 @@ private:
   // image buffer to store the final colors
   Image image_;
   Lights& lights_;
-  // how much to scale the eps of a normal to avoid self-intersection
-  static constexpr const float eps_factor = 40.0;
   // cached camera basis for mapping rays to background image
   Vec3f cam_right_{};
   Vec3f cam_up_{};

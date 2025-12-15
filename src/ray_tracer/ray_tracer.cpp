@@ -65,11 +65,12 @@ void RayTracer::ReadBackground(const std::string& filename) {
   has_background_ = (background_.width > 0 && background_.height > 0);
 }
 
+// probe the index of refraction (IOR) of the surrounding medium
 float RayTracer::SurroundingIOR(const Vec3f& where,
                                 const Object* self,
                                 const Vec3f& outward_normal) const {
-  Vec3f probe = where + outward_normal * eps * eps_factor;
-  float ret = 1.0f; // default is air
+  Vec3f probe = where + outward_normal * eps_normal;
+  float ret = 1.0f; // 1 is the IOR of air
   for (const auto& other : objects_) {
     if (other.get() == self) continue;
     if (other->IsInside(probe)) {
@@ -101,7 +102,6 @@ std::pair<bool, Vec3f> RayTracer::Refract(const Vec3f &incident,
                                           const Vec3f &N,
                                           float eta,
                                           float cosi) const {
-  //cosi = -N.Dot(incident);
   float k = 1.0f - eta * eta * (1.0f - cosi * cosi);
   if (k < 0.0f) return {true, {}}; // TIR
   float cost = std::sqrt(std::max(0.0f, k));
@@ -170,7 +170,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   Ray ray_refl{{}, {}};
   ray_refl.dir = inc.ReflectAbout(ori.normal);
   // offset slightly along the normal to avoid self-intersection
-  ray_refl.origin = ret.hit_point + ori.normal * eps * eps_factor;
+  ray_refl.origin = ret.hit_point + ori.normal * eps_normal;
   // -----> child ray (1): reflection
   Vec3u8 refl_col = TraceRay(ray_refl, depth - 1, n1).color;
 
@@ -179,10 +179,11 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   //------------------------------------------------------------------
   // Fresnel blending via Schlik approximation for the weights
   float R_fresnel = Schlick(n1, n2, cos_i);
-  // (1 - R) * trans = fraction that got trasnmitted
+  // (1 - R) * trans = fraction that got trasnmitted (refracted)
   float trans_weight = mat_trans * (1.0f - R_fresnel);
   // R * trans = fraction that got reflected instead of refracted
   float refl_weight = mat_refl + R_fresnel * mat_trans;
+  // check for total internal reflection
   bool tir = false;
   Vec3u8 refr_color{0, 0,0};
   if (mat_trans > eps) {
@@ -190,7 +191,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
     tir = is_tir;
     if (!tir) {
       Ray refr_ray{{}, {}};
-      refr_ray.origin = ret.hit_point + refr_dir * eps * eps_factor;
+      refr_ray.origin = ret.hit_point + refr_dir * eps_normal;
       refr_ray.dir = refr_dir;
       // -----> child ray (2): refraction
       refr_color = TraceRay(refr_ray, depth - 1, n2).color;
