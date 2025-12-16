@@ -5,10 +5,14 @@
 <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />
 </div>
 
-My first fully working ray tracer running on the CPU.  
-I wrote it by relying on various sources without faithfully following any source and on my own intuition - hence the name.
-
+<div align="center">
+  
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
+</div>
+
+My first fully working ray tracer running on the CPU.  
+I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
+
 
 ## Features
 
@@ -23,6 +27,7 @@ I wrote it by relying on various sources without faithfully following any source
 Future ideas:
 - [ ] Custom background color
 - [ ] Fuzziness
+- [ ] Cylinders
 
 
 ## Build instructions
@@ -126,23 +131,26 @@ More technical information in `docs/tutorials`.
   between an object and the plane, various materials, reflectivities and
   transparencies. Textures can be toggled.
 * `demo01`: Smaller scene with objects enclosed in a huge box - look around and 
-  try to spot reflections on the inner walls ;) 
+  try moving around the camera to spot reflections on the inner walls ;) 
 * `demo02`: minimal .obj file renderer. Note that it only handles vertices and
   faces, ignoring normals and textures.
+* `demo03`: Text rendered as tightly packed spheres.
 
 ## Gallery
 
-|        |       |   |   |   |
-|--------|-------|---|---|---|
-| demo00 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_077.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_320.jpg" width="300" /> |   |
-| demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |   | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="300" /> |
-| demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
-| demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" /> |   |   |   |
+|        |       |   |   |
+|--------|-------|---|---|
+| demo00 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_077.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_320.jpg" width="600" /> |
+| demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="600" />  |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="600" />   |
+| demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |
+| demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |
+
+You can also watch what it's like to move around the scenes of [demo00](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo00_textures/output.mp4) and [demo02](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo02/teapot.obj.mp4).
 
 ## References
 
-1. [Gambeta's book](https://gabrielgambetta.com/computer-graphics-from-scratch/)
-2. [refraction - de Greve](https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf)
-3. [Fresnel equations derivation](http://physics.gmu.edu/~ellswort/p263/feqn.pdf)
+1. [G. Gambeta's "Computer Graphics From Scratch"](https://gabrielgambetta.com/computer-graphics-from-scratch/)
+2. [Reflections and Refractions in Ray Tracing - B. de Greve](https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf)
+3. [Fresnel equations derivation P263](http://physics.gmu.edu/~ellswort/p263/feqn.pdf)
 4. [Pfister's slides](https://www.doc.ic.ac.uk/~dfg/graphics/graphics2010/GraphicsSlides11.pdf)
 5. [D. Sokolov's tinyraytracer](https://github.com/ssloy/tinyraytracer)
