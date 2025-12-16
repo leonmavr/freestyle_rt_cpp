@@ -89,12 +89,12 @@ int main(int argc, char** argv) {
           float x = x0 + c * cell_w;
           float y = y0 + r * cell_h;
           spheres.emplace_back(Vec3f{x, y, z0}, radius,
-                              MaterialBuilder()
-                                .Color(11, 227, 227)
-                                .Specular(40.0f)
-                                .Reflective(0.3f) 
-                                .Transparency(0.0f)
-                                .Build());
+                               MaterialBuilder()
+                                 .Color(11, 227, 227)
+                                 .Specular(40.0f)
+                                 .Reflective(0.3f) 
+                                 .Transparency(0.0f)
+                                 .Build());
         }
       }
     }
@@ -121,14 +121,14 @@ int main(int argc, char** argv) {
     ray_tracer.AddObject(std::move(s));
   // and a big glass sphere in the foreground
   Sphere s(Vec3f{0, 200, 1000}, 800,
-                    MaterialBuilder()
-                      .Color(200, 230, 255)
-                      .Specular(80.0f)
-                      .Reflective(0.4f)
-                      .Transparency(0.7f)
-                      .RefractiveIndex(1.5f)
-                      .Tint(0.2f)
-                      .Build());
+           MaterialBuilder()
+             .Color(200, 230, 255)
+             .Specular(80.0f)
+             .Reflective(0.4f)
+             .Transparency(0.7f)
+             .RefractiveIndex(1.5f)
+             .Tint(0.2f)
+             .Build());
   ray_tracer.AddObject(std::move(s));
 
   constexpr int nreflections = 3;
