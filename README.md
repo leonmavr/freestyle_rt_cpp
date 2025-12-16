@@ -9,7 +9,7 @@
 
 My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
-It doesn't use any complex lighting models and sends one ray per pixel.
+It doesn't use any complex lighting model and emits one ray per projected pixel.
 
 ## Features
 
@@ -112,7 +112,7 @@ They will write their output as PPM.
 
 ### Building tips:
 
-1. If you want to trade off performance at the expense of resolution,
+1. If you want to gain performance at the expense of resolution,
 decrease the focal length or define non-reflective/non-transparent materials.
 
 ## How this implementation works
