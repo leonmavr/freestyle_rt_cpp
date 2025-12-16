@@ -40,7 +40,7 @@ HitRecord Triangle::Intersects(const Ray& ray) const {
   float t = ainv * edge2.Dot(q);
   // FIXME: >< 0 based on camera's z relative to its origin
   if (t > 0) { // ray intersection
-    return {ray.origin + ray.dir * t, true, t};
+    return {ray.At(t), true, t};
   } else { // intersection lies behind the ray's origin 
     return {};
   }
@@ -147,7 +147,7 @@ HitRecord Sphere::Intersects(const Ray& ray) const {
   ret.t = (t1 > 0 && t2 > 0) ? std::min(t1, t2) :
           (t1 > 0 ? t1 :
           (t2 > 0 ? t2 : tmin));
-  ret.where = ray.origin + ray.dir * ret.t;
+  ret.where = ray.At(ret.t);
   return ret;
 }
 
