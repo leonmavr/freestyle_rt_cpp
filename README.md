@@ -100,6 +100,17 @@ make run use-textures
 If you're having trouble, you can refer to how the
 [CI pipeline](https://github.com/leonmavr/freestyle_raytracer/blob/master/.github/workflows/c-cpp.yml) does it.
 
+### Running the demos and moving the camera
+
+If everything went fine, you will build your binary at `./build/demoXX`. Most
+demos are run with optional command like arguments as:
+
+```
+./build/demoXX <output_file.ppm> <camera_x> <camera_y> <camera_z>
+               <camera_rotation_x_degrees> <cam_rot_y_deg> <cam_rot_z_deg>
+```
+They will write their output as PPM.
+
 </details>
 
 ## How this implementation works
