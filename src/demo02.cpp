@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   Vec3f cam_center{0, 0, -1500};
   Mat3x3 cam_rot{0.0f, 0.0f, M_PI};
   std::string output_file = "output.ppm";
-  std::string obj_path = "resources/teapot.obj";
+  std::string obj_path = "resources/obj/teapot.obj";
 
   if (argc > 1 && argv[1] != nullptr)
     output_file = std::string(argv[1]);
@@ -118,14 +118,14 @@ int main(int argc, char** argv) {
   RayTracer ray_tracer(cam, lights);
 
   // same sample material for all OBJ triangle elements
-  Material mat = MaterialBuilder()
-                   .Color(220, 220, 240)
-                   .Specular(40.0f)
-                   .Reflective(0.2f)
-                   .Transparency(0.0f)
-                   .Build();
+  Material porcelain = MaterialBuilder()
+                         .Color(220, 220, 240)
+                         .Specular(40.0f)
+                         .Reflective(0.2f)
+                         .Transparency(0.0f)
+                         .Build();
 
-  auto tris = LoadObjTriangles(obj_path, mat);
+  auto tris = LoadObjTriangles(obj_path, porcelain);
   if (tris.empty()) {
     std::cerr << "No triangles loaded from " << obj_path << std::endl;
     return -1;
