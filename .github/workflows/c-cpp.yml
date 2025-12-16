@@ -8,6 +8,7 @@ on:
       - 'gallery/**'
       - 'LICENSE*'
       - '.editor*'
+      - '*pdf'
   pull_request:
     branches: [ "master" ]
     paths-ignore:
@@ -15,6 +16,7 @@ on:
       - 'gallery/**'
       - 'LICENSE*'
       - '.editor*'
+      - '*pdf'
 jobs:
   build:
 
