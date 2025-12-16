@@ -69,15 +69,7 @@ int main(int argc, char** argv) {
   lights.AddPoint(0.45, -4000, -4000, 1000);
   RayTracer ray_tracer(cam, lights);
 
-  Material silver = MaterialBuilder()
-                      .Color(11, 227, 227)
-                      .Specular(40.0f)
-                      .Reflective(0.3f) 
-                      .Transparency(0.0f)
-                      .Build();
-
   std::vector<Sphere> spheres;
-
   const float base_z = 2500.0f;         // depth in front of camera
   const float base_y = 200.0f;          // vertical origin (top of first line)
   const float base_x = -3200.0f;        // left margin
@@ -96,7 +88,13 @@ int main(int argc, char** argv) {
         if (mask[r][c] == 'X') {
           float x = x0 + c * cell_w;
           float y = y0 + r * cell_h;
-          spheres.emplace_back(Vec3f{x, y, z0}, radius, silver);
+          spheres.emplace_back(Vec3f{x, y, z0}, radius,
+                              MaterialBuilder()
+                                .Color(11, 227, 227)
+                                .Specular(40.0f)
+                                .Reflective(0.3f) 
+                                .Transparency(0.0f)
+                                .Build());
         }
       }
     }
@@ -121,6 +119,17 @@ int main(int argc, char** argv) {
                              base_z);
   for (auto& s : spheres)
     ray_tracer.AddObject(std::move(s));
+  // and a big glass sphere in the foreground
+  Sphere s(Vec3f{0, 200, 1000}, 800,
+                    MaterialBuilder()
+                      .Color(200, 230, 255)
+                      .Specular(80.0f)
+                      .Reflective(0.4f)
+                      .Transparency(0.7f)
+                      .RefractiveIndex(1.5f)
+                      .Tint(0.2f)
+                      .Build());
+  ray_tracer.AddObject(std::move(s));
 
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);
