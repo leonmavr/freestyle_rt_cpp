@@ -38,7 +38,6 @@ HitRecord Triangle::Intersects(const Ray& ray) const {
   if (v < 0 || u + v > 1)
     return {};
   float t = ainv * edge2.Dot(q);
-  // FIXME: >< 0 based on camera's z relative to its origin
   if (t > 0) { // ray intersection
     return {ray.At(t), true, t};
   } else { // intersection lies behind the ray's origin 
