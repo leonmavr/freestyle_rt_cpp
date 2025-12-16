@@ -121,10 +121,10 @@ decrease the focal length or define non-reflective/non-transparent materials.
 <summary>Implementation details</summary>
 
 In a nutshell, when a ray hits an object, the resulting color consists of the
-sum of direct light (which is modelled as the sum of ambient, diffuse, and
+sum of direct light `D` (which is modelled as the sum of ambient, diffuse, and
 specular light and it's straightforward), the reflectiion, and the refraction.
-To compute the reflection and the refraction, we keep a depth counter (maximum
-number of ray bounces) and we recursively trace the ray by
+To compute the reflection and the refraction, we keep a depth counter `d` 
+(maximum number of ray bounces) and recursively trace the ray by
 reflecting it about the normal and refracting it into the new medium (Snell's
 law) respectively, decrementing the depth counter. The reflection, refraction,
 and direct lights are weighed and summed to compute the final color.
