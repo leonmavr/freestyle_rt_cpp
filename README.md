@@ -1,5 +1,10 @@
 # Freestyle raytracer
 
+
+<div align="center">
+<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />
+</div>
+
 My first fully working ray tracer running on the CPU.  
 I wrote it by relying on various sources without faithfully following any source and on my own intuition - hence the name.
 
@@ -23,7 +28,7 @@ Future ideas:
 ## Build instructions
 
 <details>
-<summary>Show build and textures instructions</summary>
+<summary>Show build instructions</summary>
 
 You can build this project with or without (by default) textures.
 
@@ -92,22 +97,47 @@ If you're having trouble, you can refer to how the
 
 </details>
 
+## How this implementation works
+
+<details>
+<summary>Implementation details</summary>
+
+In a nutshell, when a ray hits an object, the resulting color consists of the
+sum of direct light (which is modelled as the sum of ambient, diffuse, and
+specular light) and it's straightforward, the reflectiion, and the refraction.
+To compute the reflection and the refraction, we recursively trace the ray by
+reflecting it about the normal and refracting it into the new medium (Snell's
+law) respectively. The reflection, refraction, and direct lights are weighed
+and summed to compute the final color.
+
+The excerpt below formulates the idea skipping several details.
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/docs/tutorials/ray_tracing_algo/algo_cheat_sheet.png" alt="Algorithm cheat sheet" />
+</div>
+
+</details>
+
+More technical information in `docs/tutorials`.
+
 ## Demo scenes
 
 * `demo00`: Challenging scene with objects floating above a plane, overlap
   between an object and the plane, various materials, reflectivities and
   transparencies. Textures can be toggled.
-* `demo01`: Smaller scene with objects enclosed in a huge box - look around and you will see
-  reflections on the walls.
+* `demo01`: Smaller scene with objects enclosed in a huge box - look around and 
+  try to spot reflections on the inner walls ;) 
 * `demo02`: minimal .obj file renderer. Note that it only handles vertices and
   faces, ignoring normals and textures.
 
 ## Gallery
 
-| Output 1 | Output 2 |
-|---|---|
-| ![Output 1](images/output1.png) | ![Output 2](images/output2.png) |
-| ![Output 3](images/output3.png) | ![Output 4](images/output4.png) |
+|        |       |   |   |   |
+|--------|-------|---|---|---|
+| demo00 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_077.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_320.jpg" width="300" /> |   |
+| demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |   | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="300" /> |
+| demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
+| demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" /> |   |   |   |
 
 ## References
 
