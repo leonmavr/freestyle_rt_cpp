@@ -1,6 +1,3 @@
-# Freestyle raytracer
-
-
 <div align="center">
 <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />
 </div>
@@ -12,7 +9,7 @@
 
 My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
-
+It doesn't use any complex lighting models and sends one ray per pixel.
 
 ## Features
 
@@ -113,6 +110,11 @@ They will write their output as PPM.
 
 </details>
 
+### Building tips:
+
+1. If you want to trade off performance at the expense of resolution,
+decrease the focal length or define non-reflective/non-transparent materials.
+
 ## How this implementation works
 
 <details>
@@ -157,7 +159,11 @@ More technical information in `docs/tutorials`.
 | demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
 | demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |   |
 
-You can also watch what it's like to move around the scenes of [demo00](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo00_textures/output.mp4) and [demo02](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo02/teapot.obj.mp4).
+Below I rendered some precomputed trajectories in the scene of demo00 and demo02:
+
+https://github.com/user-attachments/assets/fd27e267-274b-4560-ad38-9d659ba376b2
+
+https://github.com/user-attachments/assets/1ba50575-3636-45cb-96cf-993deae79462
 
 ## References
 
