@@ -10,7 +10,7 @@
 [![C/C++ CI](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml/badge.svg?branch=master)](https://github.com/leonmavr/freestyle_raytracer/actions/workflows/c-cpp.yml)
 </div>
 
-My first fully working ray tracer running on the CPU.  
+My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
 
 
@@ -131,7 +131,7 @@ More technical information in `docs/tutorials`.
 * `demo00`: Challenging scene with objects floating above a plane, overlap
   between an object and the plane, various materials, reflectivities and
   transparencies. Textures can be toggled.
-* `demo01`: Smaller scene with objects enclosed in a huge box - look around and 
+* `demo01`: Smaller scene with objects enclosed in a huge box -  
   try moving around the camera to spot reflections on the inner walls ;) 
 * `demo02`: minimal .obj file renderer. Note that it only handles vertices and
   faces, ignoring normals and textures.
