@@ -115,7 +115,8 @@ reflecting it about the normal and refracting it into the new medium (Snell's
 law) respectively. The reflection, refraction, and direct lights are weighed
 and summed to compute the final color.
 
-The excerpt below formulates the idea skipping several details.
+The excerpt below formulates the idea skipping several details (you can 
+ignore the fancy T (tint) operator).
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/docs/tutorials/ray_tracing_algo/algo_cheat_sheet.png" alt="Algorithm cheat sheet" />
@@ -138,12 +139,12 @@ More technical information in `docs/tutorials`.
 
 ## Gallery
 
-|        |       |   |   |
-|--------|-------|---|---|
-| demo00 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_077.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_320.jpg" width="600" /> |
-| demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="600" />  |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="600" />   |
-| demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |
-| demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |
+|        |       |   |   |   |
+|--------|-------|---|---|---|
+| demo00 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001.jpg" width="300" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_077.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_320.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo00_textures/out_001_no_textures.jpg" width="600" /> 
+| demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="600" />  |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="600" />   |   |
+| demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
+| demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |   |
 
 You can also watch what it's like to move around the scenes of [demo00](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo00_textures/output.mp4) and [demo02](https://github.com/leonmavr/freestyle_raytracer/blob/master/gallery/demo02/teapot.obj.mp4).
 
