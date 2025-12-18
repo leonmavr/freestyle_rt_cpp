@@ -9,7 +9,7 @@
 
 My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
-It doesn't use any complex lighting model and emits one ray per projected pixel.
+It is not physically accurate, uses the Phong lighting model and emits one ray per projected pixel.
 
 ## Features
 
@@ -19,6 +19,7 @@ It doesn't use any complex lighting model and emits one ray per projected pixel.
 * Various solids and shapes (sphere, block, quad, triangle)
 * Texture mapping
 * Moving camera
+* Emissive materials (only spheres currently)
 * Misc: background image, gamma correction, minimal rendering of OBJ files
 
 Future ideas:

@@ -1,6 +1,24 @@
 #include "ray_tracer.hpp"
 #include <algorithm>
 
+
+static inline Vec3u8 AddScaled(Vec3u8 base, const Vec3u8& c, float s) {
+  if (s <= eps) return base;
+  return Vec3u8{
+    static_cast<uint8_t>(std::min(255.0f,
+                         static_cast<float>(base.x+ c.x * s))),
+    static_cast<uint8_t>(std::min(255.0f,
+                         static_cast<float>(base.y + c.y * s))),
+    static_cast<uint8_t>(std::min(255.0f,
+                         static_cast<float>(base.z + c.z * s))),
+  };
+}
+
+static inline Vec3u8 EmissiveColor(Vec3u8 base, const Material& m) {
+  // base + emission * strength
+  return AddScaled(base, m.emission, m.emit_strength);
+}
+
 RayTracer::RayTracer(const Camera& camera, Lights& lights) :
   camera_(camera),
   image_(camera.width(), camera.height()),
@@ -132,9 +150,11 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
       ret.normal = obj->NormalAt(hit.where);
     }
   }
+
   if (!ret.hit) {
     // no hit; return background color contribution
     if (has_background_) ret.color = SampleBackground(ray.dir);
+    // add a simple emissive halo for rays passing near emissive emitters
     return ret;
   }
 
@@ -143,18 +163,15 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
                                0.0f, 1.0f);
   float mat_refl = std::clamp(ret.obj->material.reflective,
                               0.0f, 1.0f);
-
   // direct lighting (surface shading) from diffuse and specular light
   Vec3u8 direct = lights_.ColorAt(objects_, *ret.obj, ret.hit_point,
                                   camera_);
   // transparency reduces the brightness
-  direct.x *= (1 - mat_trans);
-  direct.y *= (1 - mat_trans);
-  direct.z *= (1 - mat_trans);
+  direct *= (1.0f - mat_trans);
 
   // no need for more ray bounces (base case), only direct ligting 
   if (depth <= 0 || (mat_refl < eps && mat_trans < eps)) {
-    ret.color = direct;
+    ret.color = EmissiveColor(direct, ret.obj->material);
     return ret;
   }
 
@@ -229,7 +246,55 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
                          refl_col.z * refl_weight +
                          refr_color.z * trans_weight)
   };
+
+  ret.color = EmissiveColor(ret.color, ret.obj->material);
+  // add glow accumulated in air regardless of hit
+  ret.color = AddScaled(ret.color, EmissiveGlow(ray, std::max(0.0f, ret.t)), 1.0f);
   return ret;
+}
+
+Vec3u8 RayTracer::EmissiveGlow(const Ray& ray, float t_max) const {
+  // Add a soft halo for rays that pass near emissive emitters.
+  // Obviously not physically correct - just a cheap approximation.
+  // As the ray travels close to an emissive source, it picks up its
+  // glow (halo) from the closest point.
+
+  // glow accumulator from all emissive sources
+  Vec3f color_accum{0.0f, 0.0f, 0.0f};
+  const Vec3f& D = ray.dir;
+  const float t_end = std::max(0.0f, t_max);
+  // add all intensitiies from non-intersecting emissive sources
+  for (const auto& obj : objects_) {
+    // nullptr unless it can be downcasted to Sphere
+    const auto* s = dynamic_cast<const Sphere*>(obj.get());
+    if (s) {
+      const Material& m = s->material;
+      if (m.emit_strength <= eps) continue;
+      // closest point on the ray segment [0, t_end]
+      float t = (s->center - ray.origin).Dot(D);
+      t = std::clamp(t, 0.0f, t_end);
+      if (t <= 0.0f) continue;
+
+      const Vec3f closest = ray.At(t);
+      const float d_closest = (closest - s->center).Norm();
+      // direct hit (handled by intersection logic)
+      if (d_closest < s->radius) continue; 
+
+      const float delta = d_closest - s->radius;
+      constexpr float falloff_strength = 0.3f;
+      const float falloff = std::max(1.0f, s->radius * falloff_strength);
+      // exponential falloff away from the emitter silhouette
+      const float w = std::exp(-delta / falloff);
+      const float halo_strength = 0.45f * m.emit_strength * w;
+      color_accum += m.emission * halo_strength;
+      continue;
+    }
+  }
+  return Vec3u8{
+    static_cast<uint8_t>(std::min(255.0f, color_accum.x)),
+    static_cast<uint8_t>(std::min(255.0f, color_accum.y)),
+    static_cast<uint8_t>(std::min(255.0f, color_accum.z)),
+  };
 }
 
 // Compute a far sample world point along the ray from the current

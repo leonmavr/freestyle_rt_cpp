@@ -31,6 +31,9 @@ struct Material {
   // how much the material refracts light - 1 not at all, > 1 more
   float refractive_index{1};
   float tint{0.1f};      // color tint for refraction (0..1)
+  // emissive (glow): added directly to the returned color
+  Vec3u8 emission{0, 0, 0};
+  float emit_strength{0.0f};
 };
 
 struct Object {

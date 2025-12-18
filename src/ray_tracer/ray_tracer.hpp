@@ -72,14 +72,18 @@ private:
   // occured
     std::pair<bool, Vec3f>
     Refract(const Vec3f &incident, /* incident ray direction */
-      const Vec3f &N,        /* normal at intersection */
-      float eta,             /* relative refr index n1/n2 */
-      float cosi             /* cos of incident ray */) const;
+      const Vec3f &N,              /* normal at intersection */
+      float eta,                   /* relative refr index n1/n2 */
+      float cosi                   /* cos of incident ray */) const;
 
   // Schlick's approximation of Fresnel reflectance
   float Schlick(float n1, float n2, float cos_i) const;
 
   TraceRecord TraceRay(const Ray& ray, int depth, float ior_current = 1.0f) const;
+
+  // simple glow halo: add emission for rays that pass near emissive spheres
+  Vec3u8 EmissiveGlow(const Ray& ray,
+                      float t_max = std::numeric_limits<float>::infinity()) const;
 
   // map ray direction to background image using equirectangular mapping
   Vec3u8 SampleBackground(const Vec3f& dir_world) const;

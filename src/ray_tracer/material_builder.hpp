@@ -11,6 +11,8 @@ struct MaterialBuilder {
   float transparency{0.0f};
   float refractive_index{1.0f};
   float tint{0.1f};
+  Vec3u8 emission{0, 0, 0};
+  float emit_strength{0.0f};
 
   MaterialBuilder() = default;
   MaterialBuilder& Color(uint8_t r, uint8_t g, uint8_t b) {
@@ -21,6 +23,11 @@ struct MaterialBuilder {
   MaterialBuilder& Transparency(float t) { transparency = t; return *this; }
   MaterialBuilder& RefractiveIndex(float i) { refractive_index = i; return *this; }
   MaterialBuilder& Tint(float t) { tint = t; return *this; }
+  MaterialBuilder& Emission(uint8_t r, uint8_t g, uint8_t b, float strength) {
+    emission = Vec3u8{r, g, b};
+    emit_strength = strength;
+    return *this;
+  }
 
   Material Build() const {
     return Material{
@@ -30,6 +37,8 @@ struct MaterialBuilder {
       .transparency = std::clamp(transparency, 0.0f, 1.0f),
       .refractive_index = std::max(refractive_index, 1.0f),
       .tint = std::clamp(tint, 0.0f, 1.0f),
+      .emission = emission,
+      .emit_strength = std::max(0.0f, emit_strength),
     };
   }
 
