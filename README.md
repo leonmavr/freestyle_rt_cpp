@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />
+<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/logo.jpg" width="600" />
 </div>
 
 <div align="center">
