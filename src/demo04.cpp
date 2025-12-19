@@ -14,10 +14,10 @@
 
 int main(int argc, char** argv) {
   constexpr int focal_length = 200, fovx_deg = 120, fovy_deg = 100,
-    camz = -400;
+    camz = -200;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
-  Mat3x3 cam_rot{0, 0, M_PI};
+  Mat3x3 cam_rot{0, 0, 0};
   std::string output_file = "output.ppm";
 
   // first argument is the output file
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
         block_mat = MaterialBuilder()
           .Color(240, 209, 125)
           .Specular(100.0f)
-          .Reflective(0.0f)
+          .Reflective(0.15f)
           .Build();
           use_texture = true;
       }
@@ -128,14 +128,14 @@ int main(int argc, char** argv) {
               .Color(14, 237, 196)
               .Specular(10.0f)
               .Reflective(0.0f)
-              .Emission(14, 237, 196, 3.0f)
+              .Emission(14, 237, 196, 0.85f)
               .Build();
             break;
           default:
             sphere_mat = MaterialBuilder()
               .Color(9, 203, 237)
               .Specular(70.0f)
-              .Emission(255, 255, 255, 2.0f)
+              .Emission(255, 255, 255, 0.25f)
               .Build();
             break;
         }
@@ -151,8 +151,11 @@ int main(int argc, char** argv) {
   for (auto& b : blocks)
     ray_tracer.AddObject(std::move(b));
 
+#ifdef USE_TEXTURES
+  ray_tracer.ReadBackground("resources/bg/02.ppm");
+#endif
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);
-  ray_tracer.GammaCorrect(0.75);
+  ray_tracer.GammaCorrect(0.7);
   Ppm::Write(ray_tracer.image(), output_file);
 }
