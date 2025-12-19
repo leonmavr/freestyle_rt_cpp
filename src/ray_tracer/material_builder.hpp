@@ -38,7 +38,8 @@ struct MaterialBuilder {
       .refractive_index = std::max(refractive_index, 1.0f),
       .tint = std::clamp(tint, 0.0f, 1.0f),
       .emission = emission,
-      .emit_strength = std::max(0.0f, emit_strength),
+      .emit_strength = Map(std::clamp(emit_strength, 0.0f, 4.0f)/4,
+                           0.0f, 1.0f, 0.0f, 4.0f)
     };
   }
 
