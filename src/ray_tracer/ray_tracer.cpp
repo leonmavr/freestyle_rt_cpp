@@ -154,7 +154,8 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   if (!ret.hit) {
     // no hit; return background color contribution
     if (has_background_) ret.color = SampleBackground(ray.dir);
-    // add a simple emissive halo for rays passing near emissive emitters
+    // add a glow (halo) for rays passing near emitters
+    ret.color = AddScaled(ret.color, EmissiveGlow(ray), 1.0f);
     return ret;
   }
 
@@ -279,12 +280,12 @@ Vec3u8 RayTracer::EmissiveGlow(const Ray& ray, float t_max) const {
       const float d_closest = (closest - s->center).Norm();
       // direct hit (handled by intersection logic)
       if (d_closest < s->radius) continue; 
-
-      const float delta = d_closest - s->radius;
       constexpr float falloff_strength = 0.3f;
-      const float falloff = std::max(1.0f, s->radius * falloff_strength);
+      const float falloff = s->radius * falloff_strength;
       // exponential falloff away from the emitter silhouette
-      const float w = std::exp(-delta / falloff);
+      // lower bound to zero in case it's inside the sphere
+      const float w = std::exp(-std::max(d_closest - s->radius, 0.0f)
+                               /falloff);
       const float halo_strength = 0.45f * m.emit_strength * w;
       color_accum += m.emission * halo_strength;
       continue;
