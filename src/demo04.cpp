@@ -13,7 +13,7 @@
 #include <random>
 
 int main(int argc, char** argv) {
-  constexpr int focal_length = 200, fovx_deg = 120, fovy_deg = 100,
+  constexpr int focal_length = 700, fovx_deg = 120, fovy_deg = 100,
     camz = -200;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
@@ -153,9 +153,11 @@ int main(int argc, char** argv) {
 
 #ifdef USE_TEXTURES
   ray_tracer.SetBackground("resources/bg/02.ppm");
+#else
+  ray_tracer.SetBackground(97, 24, 0);
 #endif
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);
-  ray_tracer.GammaCorrect(0.7);
+  ray_tracer.GammaCorrect(0.8);
   Ppm::Write(ray_tracer.image(), output_file);
 }

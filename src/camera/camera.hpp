@@ -21,8 +21,8 @@ public:
                       std::tan(std::abs(Deg2Rad(fovy_deg)) / 2)),
         plane_width_(2 * focal_length *
                      std::tan(std::abs(Deg2Rad(fovx_deg)) / 2)) {}
-  int width() const { return plane_width_; }
-  int height() const { return plane_height_; }
+  std::size_t width() const { return plane_width_; }
+  std::size_t height() const { return plane_height_; }
   Vec3f center() const { return center_; }
 
   // perspective (pinhole) transform
@@ -33,11 +33,13 @@ public:
         Vec3i32{static_cast<int>(focal_length_ * point_c.x / point_c.z),
                 static_cast<int>(focal_length_ * point_c.y / point_c.z),
                 0};
+    auto half_w = static_cast<int>(plane_width_ / 2);
+    auto half_h = static_cast<int>(plane_height_ / 2);
     bool is_visible = (point_c.z > 0) && // invisible behind the camera
-                      (projected.x >= -plane_width_/2) &&
-                      (projected.x < plane_width_/2) &&
-                      (projected.y >= -plane_height_/2) &&
-                      (projected.y < plane_height_/2);
+                      (projected.x >= -half_w) &&
+                      (projected.x < half_w) &&
+                      (projected.y >= -half_h) &&
+                      (projected.y < half_h);
     return std::make_pair(projected, is_visible);
   }
 
@@ -84,8 +86,8 @@ private:
   Vec3f center_;
   Mat3x3 rot_;
   float focal_length_;
-  int plane_height_;
-  int plane_width_;
+  std::size_t plane_height_;
+  std::size_t plane_width_;
 
   template <typename T>
   // world coordinates to camera-centered and rotated coordinates

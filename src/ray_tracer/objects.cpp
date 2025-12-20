@@ -166,7 +166,7 @@ Block::Block(Vec3f center, float half_x, float half_y, float half_z,
     {-1, -1, -1}, { 1, -1, -1}, { 1,  1, -1}, {-1,  1, -1},
     {-1, -1,  1}, { 1, -1,  1}, { 1,  1,  1}, {-1,  1,  1},
   };
-  for (int i = 0; i < 8; ++i) {
+  for (std::size_t i{}; i < 8; ++i) {
     Vec3f vscaled(v[i][0] * half_x, v[i][1] * half_y, v[i][2] * half_z);
     vertices[i] = center + rot * vscaled;
   }
@@ -186,14 +186,17 @@ Vec3f Block::NormalAt(const Vec3f& at) const {
 
   Vec3f normal_local;
   if (ax >= ay && ax >= az) {
-      // closest to +-X face
-      normal_local = Vec3f{(local.x >= 0 ? 1 : -1), 0, 0};
+      // closest to +-x face
+      float x = (local.x >= 0.f) ? 1.f : -1.f;
+      normal_local = Vec3f{x, 0.f, 0.f};
   } else if (ay >= ax && ay >= az) {
-      // closest to +-Y face
-      normal_local = Vec3f{0.f, (local.y >= 0 ? 1 : -1), 0};
+      // closest to +-y face
+      float y = (local.y >= 0.f) ? 1.f : -1.f;
+      normal_local = Vec3f{0.f, y, 0.f};
   } else {
-      // closest to +-Z face
-      normal_local = Vec3f{0, 0.f, (local.z >= 0 ? 1 : -1)};
+      // closest to +-z face
+      float z = (local.z >= 0.f) ? 1.f : -1.f;
+      normal_local = Vec3f{0.f, 0.f, z};
   }
   // transform back into world coords 
   return (rot * normal_local).Unit();
@@ -219,7 +222,7 @@ HitRecord Block::Intersects(const Ray& ray) const {
   }};
   HitRecord ret;
   for (const auto& face : faces) {
-    auto hit = face.Intersects(ray);
+    const auto& hit = face.Intersects(ray);
     if (hit.is_hit && hit.t < ret.t)
       ret = hit;
   }

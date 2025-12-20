@@ -45,12 +45,12 @@ void RayTracer::Trace(int max_reflections) {
   cam_forward_ = (camera_.Unproject(0, 0) - camera_.center()).Unit();
   cam_right_ = (world_tr - world_tl).Unit();
   cam_up_ = (world_bl - world_tl).Unit();
-  int w = camera_.width();
-  int h = camera_.height();
-  for (int col = 0; col < w; ++col) {
+  std::size_t w = camera_.width();
+  std::size_t h = camera_.height();
+  for (std::size_t col{}; col < w; ++col) {
     // normalized column coordinate
     float u = static_cast<float>(col) / static_cast<float>(w - 1);
-    for (int row = 0; row < h; ++row) {
+    for (std::size_t row{}; row < h; ++row) {
       float v = static_cast<float>(row) / static_cast<float>(h - 1);
       // bilinear point on the (possibly rotated) image plane
       Vec3f point_world = world_tl + span_h * u + span_v * v;
@@ -65,8 +65,8 @@ void RayTracer::Trace(int max_reflections) {
 // gamma < 1 brightens the low intensitites of the image,
 // gamma > 1 darkens the high intensities
 void RayTracer::GammaCorrect(float gamma) {
-  for (int row = 0; row < image_.height; ++row) {
-    for (int col = 0; col < image_.width; ++col) {
+  for (std::size_t row{}; row < image_.height; ++row) {
+    for (std::size_t col{}; col < image_.width; ++col) {
       Vec3u8& px = image_.at(row, col);
       px.x = static_cast<uint8_t>(std::pow(px.x / 255.0f, gamma)
                                   * 255.0f);
@@ -251,7 +251,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
 
   ret.color = EmissiveColor(ret.color, ret.obj->material);
   // add glow accumulated in air regardless of hit
-  Vec3u8 emissive = EmissiveGlow(ray, std::max(0.0f, ret.t));
+  const Vec3u8& emissive = EmissiveGlow(ray, std::max(0.0f, ret.t));
   ret.color = AddScaled(ret.color, emissive, 1.0f);
   return ret;
 }
