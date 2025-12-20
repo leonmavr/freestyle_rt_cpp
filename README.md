@@ -162,9 +162,11 @@ More technical information in `docs/tutorials`.
 | demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="600" />  |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="600" />   |   |
 | demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
 | demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |   |
-| demo04 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start.jpg" width="600" />   | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/end.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_no_textures.jpg" width="600" /> | *<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_magnolia_textures.jpg" width="600" /> |
+| demo04 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start.jpg" width="600" />   | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/end.jpg" width="600" /> | *<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_no_textures.jpg" width="600" /> | **<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_magnolia_textures.jpg" width="600" /> |
 
-<sup>The crystal object (magnolia) is not in the original scene. Found it [here](https://people.sc.fsu.edu/~jburkardt/data/obj/obj.html). </sup>
+<sup>* Background color was changed to (97, 24, 0).</sup>
+
+<sup>** The crystal flower (magnolia) is not in the original scene. Found it [here](https://people.sc.fsu.edu/~jburkardt/data/obj/obj.html). </sup>
 
 Below I rendered some precomputed trajectories in the scene of demo00, demo02 and demo04:
 
