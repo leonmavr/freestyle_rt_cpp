@@ -9,7 +9,7 @@
 
 My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.
-It is not physically accurate, uses the Phong lighting model and emits one ray per projected pixel.
+It does not use physically based light models, only approximations.
 
 ## Features
 
@@ -67,13 +67,15 @@ The outputs are generated as .ppm files.
 
 ### With textures
 
-demo00 can be run with texture mapping enabled.
+Some demos (demo00, demo04) can run with texture mapping enabled.
 Texture files are large so first you will need to fetch them from git LFS.
 To install git LFS if you haven't already:
 
 | Arch-based | Debian-based |
 |---|---|
 | `pacman -S --noconfirm git-lfs` | `apt-get install -y git-lfs` |
+| `git lfs install`               | `git lfs install`            |
+
 
 Update LFS and fetch textures:
 
@@ -92,7 +94,7 @@ make convert # calls ./scripts/textures2ppm.sh
 Then you can continue by following the instructions from the previous subsection but with `use-textures` appended to the arguments, i.e.:
 
 ```
-make run use-textures
+make DEMO=demoXX run use-textures
 ```
 
 If you're having trouble, you can refer to how the
@@ -143,14 +145,14 @@ More technical information in `docs/tutorials`.
 
 ## Demo scenes
 
-* `demo00`: Challenging scene with objects floating above a plane, overlap
-  between an object and the plane, various materials, reflectivities and
-  transparencies. Textures can be toggled.
-* `demo01`: Smaller scene with objects enclosed in a huge box -  
-  try moving around the camera to spot reflections on the inner walls ;) 
-* `demo02`: minimal .obj file renderer. Note that it only handles vertices and
-  faces, ignoring normals and textures.
-* `demo03`: Text rendered as tightly packed spheres.
+| demo name   | description                                                                                                       | textures |
+|-------------|-------------------------------------------------------------------------------------------------------------------|----------|
+| `demo00`    | Challenging scene with objects floating above a plane, overlap between an object and the plane, various materials, reflectivities and transparencies. Textures can be toggled. | ✓      |
+| `demo01`    | Smaller scene with objects enclosed in a huge box; try moving around the camera to spot reflections on the inner walls.                              | ✗        |
+| `demo02`    | Minimal .obj file renderer. Handles vertices and faces only, ignoring normals and textures.                      | ✗        |
+| `demo03`    | Text rendered as tightly packed spheres.                                                                         | ✗        |
+| `demo04`    | Emissive spheres in a randomly generated arrangement of cubes.                                                   | ✓        |
+
 
 ## Gallery
 
@@ -160,12 +162,18 @@ More technical information in `docs/tutorials`.
 | demo01 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_00.jpg" width="300" /> |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_02.jpg" width="600" />  |<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo01/output_demo01_03.jpg" width="600" />   |   |
 | demo02 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo02/out_068.png" width="600" /> |   |   |   |
 | demo03 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo03/output.jpg" width="600" />  |   |   |   |
+| demo04 | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start.jpg" width="600" />   | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/end.jpg" width="600" /> | <img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_no_textures.jpg" width="600" /> | *<img src="https://raw.githubusercontent.com/leonmavr/freestyle_raytracer/refs/heads/master/gallery/demo04/start_magnolia_textures.jpg" width="600" /> |
 
-Below I rendered some precomputed trajectories in the scene of demo00 and demo02:
+<sup>The crystal object (magnolia) is not in the original scene. Found it [here](https://people.sc.fsu.edu/~jburkardt/data/obj/obj.html). </sup>
+
+Below I rendered some precomputed trajectories in the scene of demo00, demo02 and demo04:
 
 https://github.com/user-attachments/assets/fd27e267-274b-4560-ad38-9d659ba376b2
 
 https://github.com/user-attachments/assets/1ba50575-3636-45cb-96cf-993deae79462
+
+https://github.com/user-attachments/assets/03360831-f8e3-4316-8e42-f1d67b59de47
+
 
 ## References
 
