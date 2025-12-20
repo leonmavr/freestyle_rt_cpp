@@ -20,10 +20,9 @@ It does not use physically based light models, only approximations.
 * Texture mapping
 * Moving camera
 * Emissive materials (only spheres currently)
-* Misc: background image, gamma correction, minimal rendering of OBJ files
+* Misc: background image/color, gamma correction, minimal rendering of OBJ files
 
 Future ideas:
-- [ ] Custom background color
 - [ ] Fuzziness
 - [ ] Cylinders
 
