@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   lights.AddAmbient(0.85);
   lights.AddDir(0.6, 0.1, -0.7, 0.3);
   lights.AddDir(0.6, 0.3, 0.5, 0.3);
-  lights.AddDir(-0.1, 0.3, -0.2, 0.3);
+  lights.AddDir(0.3, 0.3, -0.2, 0.3);
   lights.AddPoint(1, -3000, 1000, 2000);
   lights.AddPoint(1, -2600, 1200, 3000);
   RayTracer ray_tracer(cam, lights);
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
     ray_tracer.AddObject(std::move(b));
 
 #ifdef USE_TEXTURES
-  ray_tracer.ReadBackground("resources/bg/02.ppm");
+  ray_tracer.SetBackground("resources/bg/02.ppm");
 #endif
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);

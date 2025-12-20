@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
     ray_tracer.AddObject(std::move(b));
 
 #ifdef USE_TEXTURES
-  ray_tracer.ReadBackground("resources/bg/01.ppm");
+  ray_tracer.SetBackground("resources/bg/01.ppm");
 #endif
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);

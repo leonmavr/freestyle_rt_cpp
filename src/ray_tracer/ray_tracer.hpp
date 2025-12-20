@@ -40,7 +40,12 @@ public:
   // gamma > 1 darkens the high intensities
   void GammaCorrect(float gamma);
 
-  void ReadBackground(const std::string& filename);
+  // background can be a PPM image or a solid color
+  void SetBackground(const std::string& filename);
+  void SetBackground(uint8_t r, uint8_t g, uint8_t b) {
+    has_background_ = false;
+    background_color_ = {r, g, b};
+  }
 
 private:
   // get the corrent IOR (index of refraction) and normal arrangement
@@ -102,6 +107,8 @@ private:
   // spherical background
   Image background_{};
   bool has_background_{false};
+  // solid background color when no background image is used
+  Vec3u8 background_color_{0, 0, 0};
 };
 
 #endif // RAY_TRACER_HPP_

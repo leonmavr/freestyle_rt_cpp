@@ -78,7 +78,7 @@ void RayTracer::GammaCorrect(float gamma) {
   }
 }
 
-void RayTracer::ReadBackground(const std::string& filename) {
+void RayTracer::SetBackground(const std::string& filename) {
   Ppm::Read(background_, filename);
   has_background_ = (background_.width > 0 && background_.height > 0);
 }
@@ -153,7 +153,8 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
 
   if (!ret.hit) {
     // no hit; return background color contribution
-    if (has_background_) ret.color = SampleBackground(ray.dir);
+    ret.color = (has_background_) ? SampleBackground(ray.dir)
+                                  : background_color_;
     // add a glow (halo) for rays passing near emitters
     ret.color = AddScaled(ret.color, EmissiveGlow(ray), 1.0f);
     return ret;
@@ -250,7 +251,8 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
 
   ret.color = EmissiveColor(ret.color, ret.obj->material);
   // add glow accumulated in air regardless of hit
-  ret.color = AddScaled(ret.color, EmissiveGlow(ray, std::max(0.0f, ret.t)), 1.0f);
+  Vec3u8 emissive = EmissiveGlow(ray, std::max(0.0f, ret.t));
+  ret.color = AddScaled(ret.color, emissive, 1.0f);
   return ret;
 }
 
@@ -303,7 +305,7 @@ Vec3u8 RayTracer::EmissiveGlow(const Ray& ray, float t_max) const {
 // -> map that point's two spherical angles with wrapping
 // -> map (scale) those those to background pixel coordinates
 Vec3u8 RayTracer::SampleBackground(const Vec3f& dir_world) const {
-  if (!has_background_) return {0,0,0};
+  if (!has_background_) return background_color_;
   // heuristic: choose a point n*focal_length times away in the
   // world's direction to set it as parallax; the larger the n,
   // the less sensitive the background to translation
