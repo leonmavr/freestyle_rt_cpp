@@ -6,7 +6,7 @@ Camera::Camera(float depth, float fovx_deg, float fovy_deg,
                Vec3f center, Mat3x3 rot)
     : center_(center),
       rot_(rot),
-      depth_(depth),
+      depth_(std::max(1.0f, depth)),
       plane_height_(2 * depth *
                     std::tan(std::abs(Deg2Rad(fovy_deg)) / 2)),
       plane_width_(2 * depth *
