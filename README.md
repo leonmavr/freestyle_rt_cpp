@@ -113,8 +113,8 @@ They will write their output as PPM.
 
 ### Building tips:
 
-1. If you want to gain performance at the expense of resolution,
-decrease the focal length or define non-reflective/non-transparent materials.
+1. If you want to gain performance at the expense of resolution
+decrease the camera's depth, or define non-reflective/non-transparent materials.
 
 ## How this implementation works
 
