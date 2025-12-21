@@ -76,10 +76,9 @@ To install git LFS if you haven't already:
 | `git lfs install`               | `git lfs install`            |
 
 
-Update LFS and fetch textures:
+If everything is installed, update LFS and fetch textures:
 
 ```bash
-git lfs install
 git lfs fetch --all
 git lfs checkout
 ```
