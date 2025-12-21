@@ -9,7 +9,7 @@
 
 My first fully working ray tracer, running on the CPU.  
 I wrote it by relying on various sources without faithfully following any of them, often relying on my own intuition - hence the name.  
-It is not physically based as it uses the Phong lighting model and some easy to compute appoximations.
+It is not physically based as it uses the Phong lighting model and some easy to compute approximations.
 
 ## Features
 
