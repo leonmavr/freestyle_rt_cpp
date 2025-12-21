@@ -9,83 +9,37 @@
 #include <array>
 
 
-// pinhole camera model
+// Perspective projection camera model with a constant field of view
+// (FOV).
+// The higher the camera depth (z of the camera plane), the higher the
+// resolution of the projected image.
 class Camera {
 public:
-  Camera(float focal_length, float fovx_deg, float fovy_deg,
-         Vec3f center = {0, 0, 0}, Mat3x3 rot = {})
-      : center_(center),
-        rot_(rot),
-        focal_length_(focal_length),
-        plane_height_(2 * focal_length *
-                      std::tan(std::abs(Deg2Rad(fovy_deg)) / 2)),
-        plane_width_(2 * focal_length *
-                     std::tan(std::abs(Deg2Rad(fovx_deg)) / 2)) {}
-  std::size_t width() const { return plane_width_; }
-  std::size_t height() const { return plane_height_; }
-  Vec3f center() const { return center_; }
-
-  // perspective (pinhole) transform
-  std::pair<Vec3i32, bool> Project(Vec3f point) {
-    Vec3f point_c = World2Cam(point); // in camera (3D) coords
-    // to camera plane (2D)
-    auto projected =  
-        Vec3i32{static_cast<int>(focal_length_ * point_c.x / point_c.z),
-                static_cast<int>(focal_length_ * point_c.y / point_c.z),
-                0};
-    auto half_w = static_cast<int>(plane_width_ / 2);
-    auto half_h = static_cast<int>(plane_height_ / 2);
-    bool is_visible = (point_c.z > 0) && // invisible behind the camera
-                      (projected.x >= -half_w) &&
-                      (projected.x < half_w) &&
-                      (projected.y >= -half_h) &&
-                      (projected.y < half_h);
-    return std::make_pair(projected, is_visible);
-  }
-
-  // unproject a point from the camera plane to world coordinates
-  Vec3f Unproject(float plane_x, float plane_y) const {
-    // no need to use the inverse perspective transform as the point is
-    // already at z=f - simply recover it from world to camera eq/n 
-    Vec3f p_cam{plane_x, plane_y, focal_length_};
-    Mat3x3 R_inv = rot_.Transpose(); // inverse = transpose in this case
-    return center_ + R_inv * p_cam;
-  }
-
-  // the 4 corners of the image (camera) plane in world coords
-  std::array<Vec3f, 4> CornersWorld() const {
-    float hw = static_cast<float>(plane_width_) / 2.0f;
-    float hh = static_cast<float>(plane_height_) / 2.0f;
-    Vec3f tl = Unproject(-hw, -hh); // y=-hh => top
-    Vec3f tr = Unproject( hw, -hh);
-    Vec3f bl = Unproject(-hw,  hh);
-    Vec3f br = Unproject( hw,  hh);
-    return {tl, tr, bl, br};
-  }
-
-  // axis-aligned bounding box of the current image plane corners in world space
-  std::pair<Vec3f, Vec3f> AABBWorld() const {
-    auto c = CornersWorld();
-    Vec3f mn = c[0], mx = c[0];
-    for (const auto &p : c) {
-      mn.x = std::min(mn.x, p.x); mn.y = std::min(mn.y, p.y); mn.z = std::min(mn.z, p.z);
-      mx.x = std::max(mx.x, p.x); mx.y = std::max(mx.y, p.y); mx.z = std::max(mx.z, p.z);
-    }
-    return {mn, mx};
-  }
-
-  void Translate(Vec3f dxdydz) { center_ += dxdydz; } 
-  void Rotate(float dx_rad, float dy_rad, float dz_rad) { 
+  Camera(float depth, float fovx_deg, float fovy_deg,
+         Vec3f center = {0, 0, 0}, Mat3x3 rot = {});
+  void Translate(Vec3f dxdydz) { center_ += dxdydz; }
+  void Rotate(float dx_rad, float dy_rad, float dz_rad) {
     Mat3x3 mat(dx_rad, dy_rad, dz_rad);
     rot_ = mat * rot_;
   }
-  float focal_length() const { return focal_length_; }
+
+  // unproject a point from the camera plane to world coordinates
+  Vec3f Unproject(float plane_x, float plane_y) const;
+  // the 4 corners of the image (camera) plane in world coords
+  std::array<Vec3f, 4> CornersWorld() const;
+  // axis-aligned bounding box of the current image plane corners in
+  // world space
+  std::pair<Vec3f, Vec3f> AABBWorld() const;
+  float depth() const { return depth_; }
+  std::size_t width() const { return plane_width_; }
+  std::size_t height() const { return plane_height_; }
+  Vec3f center() const { return center_; }
 
 private:
   // center of projection
   Vec3f center_;
   Mat3x3 rot_;
-  float focal_length_;
+  float depth_;
   std::size_t plane_height_;
   std::size_t plane_width_;
 

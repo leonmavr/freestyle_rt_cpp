@@ -10,7 +10,7 @@
 
 // Several glassy objects enclosed in a box
 int main(int argc, char** argv) {
-  constexpr int focal_length = 900, fovx_deg = 70, fovy_deg = 60;
+  constexpr int depth = 900, fovx_deg = 70, fovy_deg = 60;
   Vec3f cam_center{0, -600, -400};
   Mat3x3 cam_rot{-0.3f, 0.0f, M_PI};
   std::string output_file = "output.ppm";
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
                 << std::endl;
     }
   }
-  Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
+  Camera cam(depth, fovx_deg, fovy_deg, cam_center, cam_rot);
 
   Lights lights;
   lights.AddAmbient(0.65);

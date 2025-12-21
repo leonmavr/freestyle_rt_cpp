@@ -103,7 +103,7 @@ Vec3u8 Sphere::SampleColor(const Vec3f& at) const {
   // spherical angles - latitude (theta) and longitude (phi)
   float theta = std::atan2(N.z, N.x); // [-pi, pi]
   float phi = std::acos(N.y);         // [0, pi] assuming N normalized
-  // equirectangular mapping but for spherical coords
+  // equirectangular mapping but for spherical coordsa
   float u = theta / (2.0f * static_cast<float>(M_PI)) + 0.5f;
   float v = phi / static_cast<float>(M_PI);
   // flip so v=0 is top row in image coordinates

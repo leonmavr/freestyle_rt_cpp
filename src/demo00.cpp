@@ -12,7 +12,7 @@
 
 // Challenging scene testing all of the capabilities of the ray tracer
 int main(int argc, char** argv) {
-  constexpr int focal_length = 400, fovx_deg = 120, fovy_deg = 100,
+  constexpr int depth = 400, fovx_deg = 120, fovy_deg = 100,
     camz = -1000;
   // default camera parameters
   Vec3f cam_center{0, 0, camz};
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
                 << std::endl;
     }
   }
-  Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
+  Camera cam(depth, fovx_deg, fovy_deg, cam_center, cam_rot);
 
   Lights lights;
   lights.AddAmbient(0.85);

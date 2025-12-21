@@ -31,7 +31,8 @@ INCLUDES := $(patsubst %,-I%,$(INCDIRS))
 # make DEFINES=-DUSE_TEXTURES <target>
 DEFINES ?=
 
-CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP $(DEFINES)
+CXXFLAGS := $(INCLUDES) -O3 -std=c++17 -Wall -Wextra -MMD -MP\
+            $(DEFINES) -Wno-unused-parameter -Wno-unused-function
 LDFLAGS  :=
 LDLIBS   :=
 

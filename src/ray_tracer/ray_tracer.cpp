@@ -306,10 +306,10 @@ Vec3u8 RayTracer::EmissiveGlow(const Ray& ray, float t_max) const {
 // -> map (scale) those those to background pixel coordinates
 Vec3u8 RayTracer::SampleBackground(const Vec3f& dir_world) const {
   if (!has_background_) return background_color_;
-  // heuristic: choose a point n*focal_length times away in the
+  // heuristic: choose a point n*camera_depth times away in the
   // world's direction to set it as parallax; the larger the n,
   // the less sensitive the background to translation
-  const float z_parallax = 15 * camera_.focal_length();
+  const float z_parallax = 15 * camera_.depth();
   Vec3f sample_world = camera_.center() + dir_world * z_parallax;
   // Convert the world point to spherical angles relative to world origin.
   float x = sample_world.x;

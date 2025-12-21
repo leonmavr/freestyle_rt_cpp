@@ -31,7 +31,7 @@ static std::vector<std::string> FontMask(char c) {
 }
 
 int main(int argc, char** argv) {
-  constexpr int focal_length = 700, fovx_deg = 130, fovy_deg = 80;
+  constexpr int depth = 500, fovx_deg = 130, fovy_deg = 80;
   Vec3f cam_center{450, 800, -100};
   Mat3x3 cam_rot;
   std::string output_file = "output.ppm";
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
       std::cerr << "Invalid camera rotation, using defaults." << std::endl;
     }
   }
-  Camera cam(focal_length, fovx_deg, fovy_deg, cam_center, cam_rot);
+  Camera cam(depth, fovx_deg, fovy_deg, cam_center, cam_rot);
 
   Lights lights;
   lights.AddAmbient(0.85);
