@@ -72,13 +72,13 @@ int main(int argc, char** argv) {
                      .Tint(0.25f)
                      .Build();
   Material crystal = MaterialBuilder()
-                       .Color(20, 179, 227)
-                       .Specular(90.0f)
-                       .Reflective(0.3f)
-                       .Transparency(0.85f)
-                       .RefractiveIndex(1.7f)
-                       .Tint(0.75f)
-                       .Build();
+                      .Color(20, 179, 227)
+                      .Specular(90.0f)
+                      .Reflective(0.3f)
+                      .Transparency(0.85f)
+                      .RefractiveIndex(1.7f)
+                      .Tint(0.75f)
+                      .Build();
   Material marble = MaterialBuilder()
                       .Color(230, 230, 230)
                       .Specular(10.0f)

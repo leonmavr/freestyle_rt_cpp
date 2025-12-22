@@ -50,21 +50,21 @@ int main(int argc, char** argv) {
   RayTracer ray_tracer(cam, lights);
 
   Material glass = MaterialBuilder()
-                    .Color(255, 255, 255)
-                    .Specular(60.0f)
-                    .Reflective(0.3f)
-                    .Transparency(0.6f)
-                    .RefractiveIndex(1.25f)
-                    .Tint(0.25f)
-                    .Build();
+                     .Color(255, 255, 255)
+                     .Specular(60.0f)
+                     .Reflective(0.3f)
+                     .Transparency(0.6f)
+                     .RefractiveIndex(1.25f)
+                     .Tint(0.25f)
+                     .Build();
   Material crystal = MaterialBuilder()
-                      .Color(255, 255, 255)
-                      .Specular(80.0f)
-                      .Reflective(0.4f)
-                      .Transparency(0.7f)
-                      .RefractiveIndex(1.5f)
-                      .Tint(0.25f)
-                      .Build();
+                       .Color(255, 255, 255)
+                       .Specular(80.0f)
+                       .Reflective(0.4f)
+                       .Transparency(0.7f)
+                       .RefractiveIndex(1.5f)
+                       .Tint(0.25f)
+                       .Build();
 
   std::vector<Sphere> spheres;
   spheres.emplace_back(Vec3f{-600, -200, 1500}, 300,
