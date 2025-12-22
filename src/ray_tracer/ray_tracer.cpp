@@ -248,9 +248,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
                          refl_col.z * refl_weight +
                          refr_color.z * trans_weight)
   };
-
-  ret.color = EmissiveColor(ret.color, ret.obj->material);
-  // add glow accumulated in air regardless of hit
+  // add glow accumulated in air if no reflection or refraction
   const Vec3u8& emissive = EmissiveGlow(ray, std::max(0.0f, ret.t));
   ret.color = AddScaled(ret.color, emissive, 1.0f);
   return ret;
