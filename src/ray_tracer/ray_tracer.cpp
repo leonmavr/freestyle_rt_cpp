@@ -282,6 +282,8 @@ Vec3u8 RayTracer::EmissiveGlow(const Ray& ray, float t_max) const {
       if (d_closest < s->radius) continue; 
       constexpr float falloff_strength = 0.3f;
       const float falloff = s->radius * falloff_strength;
+      // Light attenuation based on Beer-Lambert law:
+      // sciencedirect.com/topics/engineering/beer-lambert-law
       // exponential falloff away from the emitter silhouette
       // lower bound to zero in case it's inside the sphere
       const float w = std::exp(-std::max(d_closest - s->radius, 0.0f)
