@@ -25,6 +25,8 @@ It is not physically based as it uses the Phong lighting model and some easy to 
 Future ideas:
 - [ ] Matte materials via Lambertian
 - [ ] Cylinders
+- [ ] Pinhole camera with spherical projection surface (instead of plane)
+- [ ] Perlin noise textures
 
 
 ## Build instructions
