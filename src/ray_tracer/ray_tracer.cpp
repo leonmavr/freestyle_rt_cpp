@@ -130,8 +130,7 @@ std::pair<bool, Vec3f> RayTracer::Refract(const Vec3f &incident,
 
 float RayTracer::Schlick(float n1, float n2, float cos_i) const {
   float r0 = (n1 - n2) / (n1 + n2);
-  r0 *= r0;
-  return r0 + (1.0f - r0) * std::pow(1.0f - cos_i, 5.0f);
+  return r0*r0 + (1.0f - r0*r0) * std::pow(1.0f - cos_i, 5.0f);
 }
 
 TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) const {
@@ -178,7 +177,7 @@ TraceRecord RayTracer::TraceRay(const Ray& ray, int depth, float ior_current) co
   }
 
   // incident (pointing away from origin, against the normal)
-  Vec3f inc = ray.dir; 
+  const Vec3f& inc = ray.dir; 
   auto ori = RayOrientation(ret, inc, ior_current);
   // cos_i refers to the angle between normal and incident
   float n1 = ori.n1, n2 = ori.n2, eta = ori.eta, cos_i = ori.cos_i;
