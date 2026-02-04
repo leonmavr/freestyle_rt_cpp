@@ -37,6 +37,7 @@ struct Material {
 };
 
 struct Object {
+  virtual ~Object() = default;
   virtual Vec3f NormalAt(const Vec3f &at) const = 0;
   // only to be overriden for closed solids
   virtual bool IsInside(const Vec3f &point) const {

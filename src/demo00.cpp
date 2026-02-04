@@ -5,7 +5,6 @@
 #include "vec.hpp"
 #include "material_builder.hpp"
 #include "common.hpp"
-#include <vector>
 #include <string>
 #include <iostream>
 #include <cmath>
@@ -56,8 +55,6 @@ int main(int argc, char** argv) {
   lights.AddPoint(1, -1800, -3700, 5000);
   lights.AddPoint(0.45, -4000, -4000, 1000);
   RayTracer ray_tracer(cam, lights);
-  std::vector<Sphere> spheres;
-  std::vector<Block> blocks;
   Material plastic = MaterialBuilder()
                        .Color(19, 204, 237)
                        .Specular(100.0f)
@@ -98,65 +95,73 @@ int main(int argc, char** argv) {
   Ppm::Read(*tex_checker, "resources/textures/checkerboard_01.ppm");
 #endif
 
-  spheres.emplace_back(Vec3f{0, -400, 2100}, 400.0f, plastic);
+  ray_tracer.AddObject<Sphere>(Vec3f{0, -400, 2100}, 400.0f, plastic);
   {
     auto m = glass;
     m.color = {26, 240, 87};
-    spheres.emplace_back(Vec3f{1100, 200, 1800}, 600.0f, m);
+    ray_tracer.AddObject<Sphere>(Vec3f{1100, 200, 1800}, 600.0f, m);
   }
-  spheres.emplace_back(Vec3f{-1100, 200, 1800}, 600.0f, glass);
+  ray_tracer.AddObject<Sphere>(Vec3f{-1100, 200, 1800}, 600.0f, glass);
   {
     auto m = plastic;
     m.color = {240, 34, 181};
     m.reflective = 0.0f;
-    spheres.emplace_back(Vec3f{-1300, -700, 5600}, 600.0f, m);
+    ray_tracer.AddObject<Sphere>(Vec3f{-1300, -700, 5600}, 600.0f, m);
     m.specular = 50.0f;
     m.reflective = 0.1f;
-    spheres.emplace_back(Vec3f{1300, -700, 5600}, 600.0f, m);
+    auto& earth = ray_tracer.AddObject<Sphere>(
+        Vec3f{1300, -700, 5600}, 600.0f, m);
   #ifdef USE_TEXTURES
-    spheres.back().SetTexture(tex_earth);
+    earth.SetTexture(tex_earth);
   #endif
   }
-  spheres.emplace_back(Vec3f{-4000, 1200, 3200}, 950.0f, crystal);
+  ray_tracer.AddObject<Sphere>(Vec3f{-4000, 1200, 3200}, 950.0f, crystal);
   
   // pillars
-  blocks.emplace_back(Vec3f{-1700, 800, 450}, 150, 700, 70, Mat3x3{},
-                      marble);
+  auto& pillar0 = ray_tracer.AddObject<Block>(
+      Vec3f{-1700, 800, 450}, 150, 700, 70, Mat3x3{}, marble);
 #ifdef USE_TEXTURES
-  blocks.back().SetTexture(tex_marble, 1, 3);
+  pillar0.SetTexture(tex_marble, 1, 3);
 #endif
-  blocks.emplace_back(Vec3f{1700, 800, 450}, 150, 700, 70, Mat3x3{},
-                      marble);
+  auto& pillar1 = ray_tracer.AddObject<Block>(
+      Vec3f{1700, 800, 450}, 150, 700, 70, Mat3x3{}, marble);
 #ifdef USE_TEXTURES
-  blocks.back().SetTexture(tex_marble, 1, 3);
+  pillar1.SetTexture(tex_marble, 1, 3);
 #endif
   // "ruin"
   {
     auto m = marble;
     m.reflective = 0.0f;
-    blocks.emplace_back(Vec3f{0, 1450, 1000}, 220, 220, 180,
-                        Mat3x3{0.1f, 0.3f, 0.5f}, m);
-  }
+    auto& ruin = ray_tracer.AddObject<Block>(
+        Vec3f{0, 1450, 1000}, 220, 220, 180,
+        Mat3x3{0.1f, 0.3f, 0.5f}, m);
 #ifdef USE_TEXTURES
-  blocks.back().SetTexture(tex_marble);
+    ruin.SetTexture(tex_marble);
 #endif
+  }
   // floating rocks
-  blocks.emplace_back(Vec3f{2000, -4500, 7000}, 500, 500, 400,
-                      Mat3x3{1.2f, -0.4f, 0.8f}, marble);
+  auto& rock0 = ray_tracer.AddObject<Block>(
+      Vec3f{2000, -4500, 7000}, 500, 500, 400,
+      Mat3x3{1.2f, -0.4f, 0.8f}, marble);
+  Block* rock1 = nullptr;
   {
     auto m = marble;
     m.specular = 1.0f;
-    blocks.emplace_back(Vec3f{-3500, -3200, 8000}, 350, 400, 400,
-                        Mat3x3{0.3f, 0.0f, -0.6f}, m);
+    rock1 = &ray_tracer.AddObject<Block>(
+        Vec3f{-3500, -3200, 8000}, 350, 400, 400,
+        Mat3x3{0.3f, 0.0f, -0.6f}, m);
   }
-  blocks.emplace_back(Vec3f{4500, -2600, 4000}, 180, 230, 280,
-                      Mat3x3{1.5f, 1.0f, -0.3f}, marble);
+  auto& rock2 = ray_tracer.AddObject<Block>(
+      Vec3f{4500, -2600, 4000}, 180, 230, 280,
+      Mat3x3{1.5f, 1.0f, -0.3f}, marble);
 #ifdef USE_TEXTURES
-  for (size_t i = blocks.size() - 3; i < blocks.size(); ++i)
-    blocks[i].SetTexture(tex_granite);
+  rock0.SetTexture(tex_granite);
+  if (rock1) rock1->SetTexture(tex_granite);
+  rock2.SetTexture(tex_granite);
 #endif
   // ground
-  Block ground({0, 1500, 4000}, 6500, 20, 8000);
+  auto& ground = ray_tracer.AddObject<Block>(
+      Vec3f{0, 1500, 4000}, 6500, 20, 8000);
   ground.material = MaterialBuilder()
                       .Color(30, 30, 30)
                       .Specular(2.0f)
@@ -165,12 +170,6 @@ int main(int argc, char** argv) {
 #ifdef USE_TEXTURES
   ground.SetTexture(tex_checker, 10, 10);
 #endif
-  ray_tracer.AddObject(std::move(ground));
-
-  for (auto& s : spheres)
-    ray_tracer.AddObject(std::move(s));
-  for (auto& b : blocks)
-    ray_tracer.AddObject(std::move(b));
 
 #ifdef USE_TEXTURES
   ray_tracer.SetBackground("resources/bg/01.ppm");

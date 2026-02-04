@@ -4,7 +4,6 @@
 #include "ray_tracer.hpp"
 #include "vec.hpp"
 #include "material_builder.hpp"
-#include <vector>
 #include <string>
 #include <iostream>
 
@@ -66,37 +65,36 @@ int main(int argc, char** argv) {
                        .Tint(0.25f)
                        .Build();
 
-  std::vector<Sphere> spheres;
-  spheres.emplace_back(Vec3f{-600, -200, 1500}, 300,
-    MaterialBuilder().Color(232, 21, 95).Specular(5).Reflective(0.25f)
-                     .Transparency(0.0f).Build());
-  spheres.emplace_back(Vec3f{160, 190, 500}, 100, glass);
+  ray_tracer.AddObject<Sphere>(
+      Vec3f{-600, -200, 1500}, 300,
+      MaterialBuilder().Color(232, 21, 95).Specular(5).Reflective(0.25f)
+                       .Transparency(0.0f).Build());
+  ray_tracer.AddObject<Sphere>(Vec3f{160, 190, 500}, 100, glass);
   {
     Material m = crystal;
     m.color = {34, 235, 23};
     m.specular = 20;
     m.transparency = 0.5f;
-    spheres.emplace_back(Vec3f{-300, 400, 2000}, 250, m);
+    ray_tracer.AddObject<Sphere>(Vec3f{-300, 400, 2000}, 250, m);
   }
-  for (auto& s : spheres)
-    ray_tracer.AddObject(std::move(s));
 
-  std::vector<Block> blocks;
-  blocks.emplace_back(Vec3f{250, -100, 1100}, 200, 300, 100,
-    Mat3x3{-0.65f, 0.35f, 0.2f}, MaterialBuilder().Specular(50)
-    .Reflective(0.3f).Transparency(0.45f).RefractiveIndex(1.3f)
-    .Tint(0.2f).Build());
-  blocks.emplace_back(Vec3f{0, 0, 2000}, 400, 250, 100,
-    Mat3x3{0.2f, -0.9f, 0.3f}, MaterialBuilder()
-    .Color(235, 206, 23).Specular(150).Reflective(0.7f)
-    .Transparency(0.0f).Tint(0.1f).Build());
+  ray_tracer.AddObject<Block>(
+      Vec3f{250, -100, 1100}, 200, 300, 100,
+      Mat3x3{-0.65f, 0.35f, 0.2f}, MaterialBuilder().Specular(50)
+        .Reflective(0.3f).Transparency(0.45f).RefractiveIndex(1.3f)
+        .Tint(0.2f).Build());
+  ray_tracer.AddObject<Block>(
+      Vec3f{0, 0, 2000}, 400, 250, 100,
+      Mat3x3{0.2f, -0.9f, 0.3f}, MaterialBuilder()
+        .Color(235, 206, 23).Specular(150).Reflective(0.7f)
+        .Transparency(0.0f).Tint(0.1f).Build());
   {
     Material m = crystal;
     m.color = {0, 255, 30};
     m.tint = 0.8;
     m.specular = 20;
-    blocks.emplace_back(Vec3f{400, -300, 1400}, 100, 150, 100,
-      Mat3x3{}, m);
+    ray_tracer.AddObject<Block>(Vec3f{400, -300, 1400}, 100, 150, 100,
+                                    Mat3x3{}, m);
   }
   {
     Material m = glass;
@@ -104,11 +102,9 @@ int main(int argc, char** argv) {
     m.transparency = 0.0f;
     m.specular = 40;
     m.reflective = 0.5f;
-    blocks.emplace_back(Vec3f{0, 0, 0}, 16000, 6000, 6000, Mat3x3{},
-      m);
+    ray_tracer.AddObject<Block>(Vec3f{0, 0, 0}, 16000, 6000, 6000, Mat3x3{},
+                                    m);
   }
-  for (auto& b : blocks)     
-    ray_tracer.AddObject(std::move(b));
 
   constexpr int nreflections = 4;
   ray_tracer.Trace(nreflections);

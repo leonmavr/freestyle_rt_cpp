@@ -88,13 +88,14 @@ int main(int argc, char** argv) {
         if (mask[r][c] == 'X') {
           float x = x0 + c * cell_w;
           float y = y0 + r * cell_h;
-          spheres.emplace_back(Vec3f{x, y, z0}, radius,
-                               MaterialBuilder()
-                                 .Color(11, 227, 227)
-                                 .Specular(40.0f)
-                                 .Reflective(0.3f) 
-                                 .Transparency(0.0f)
-                                 .Build());
+          ray_tracer.AddObject<Sphere>(
+              Vec3f{x, y, z0}, radius,
+              MaterialBuilder()
+                .Color(11, 227, 227)
+                .Specular(40.0f)
+                .Reflective(0.3f)
+                .Transparency(0.0f)
+                .Build());
         }
       }
     }
@@ -117,19 +118,17 @@ int main(int argc, char** argv) {
                              base_y + FontMask('F').size() * cell_h +
                                       line_spacing,
                              base_z);
-  for (auto& s : spheres)
-    ray_tracer.AddObject(std::move(s));
   // and a big glass sphere in the foreground
-  Sphere s(Vec3f{0, 200, 1000}, 800,
-           MaterialBuilder()
-             .Color(200, 230, 255)
-             .Specular(80.0f)
-             .Reflective(0.4f)
-             .Transparency(0.7f)
-             .RefractiveIndex(1.5f)
-             .Tint(0.2f)
-             .Build());
-  ray_tracer.AddObject(std::move(s));
+  ray_tracer.AddObject<Sphere>(
+      Vec3f{0, 200, 1000}, 800,
+      MaterialBuilder()
+        .Color(200, 230, 255)
+        .Specular(80.0f)
+        .Reflective(0.4f)
+        .Transparency(0.7f)
+        .RefractiveIndex(1.5f)
+        .Tint(0.2f)
+        .Build());
 
   constexpr int nreflections = 3;
   ray_tracer.Trace(nreflections);

@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     return -1;
   }
   for (auto& t : tris)
-    ray_tracer.AddObject(std::move(t));
+    ray_tracer.AddObject<Triangle>(std::move(t));
 
   constexpr int nreflections = 3;
   //ray_tracer.ReadBackground("resources/bg/01.ppm");

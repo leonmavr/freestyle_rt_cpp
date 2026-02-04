@@ -5,7 +5,6 @@
 #include "vec.hpp"
 #include "material_builder.hpp"
 #include "common.hpp"
-#include <vector>
 #include <string>
 #include <iostream>
 #include <cmath>
@@ -56,8 +55,6 @@ int main(int argc, char** argv) {
   lights.AddPoint(1, -3000, 1000, 2000);
   lights.AddPoint(1, -2600, 1200, 3000);
   RayTracer ray_tracer(cam, lights);
-  std::vector<Sphere> spheres;
-  std::vector<Block> blocks;
 #ifdef USE_TEXTURES
   auto tex_checker = std::make_shared<Image>();
   Ppm::Read(*tex_checker, "resources/textures/checkerboard_02.ppm");
@@ -86,7 +83,6 @@ int main(int argc, char** argv) {
     std::uniform_int_distribution<int> block_choice(0, 1);
     std::uniform_int_distribution<int> sphere_choice(0, 2);
     n_blocks = std::max(0, std::min(n_blocks, static_cast<int>(centers.size())));
-    blocks.reserve(blocks.size() + static_cast<size_t>(n_blocks));
 
     for (int i = 0; i < n_blocks; ++i) {
       const Vec3f& c = centers[static_cast<size_t>(i)];
@@ -107,10 +103,11 @@ int main(int argc, char** argv) {
           use_texture = true;
       }
       
-      blocks.emplace_back(c, half, half, half, Mat3x3{}, block_mat);
+      auto& block = ray_tracer.AddObject<Block>(
+          c, half, half, half, Mat3x3{}, block_mat);
 #ifdef USE_TEXTURES
       if (use_texture)
-        blocks.back().SetTexture(tex_checker, 2, 2);    
+        block.SetTexture(tex_checker, 2, 2);
 #endif
       if (sphere_chance(rng) == 0) {
         Vec3f sphere_center = Vec3f{c.x, c.y + 2*half, c.z};
@@ -139,17 +136,12 @@ int main(int argc, char** argv) {
               .Build();
             break;
         }
-        spheres.emplace_back(sphere_center, half, sphere_mat);
+        ray_tracer.AddObject<Sphere>(sphere_center, half, sphere_mat);
       }
     }
   };
   constexpr int nobjects = 40;
   make_random_object(nobjects);
-
-  for (auto& s : spheres)
-    ray_tracer.AddObject(std::move(s));
-  for (auto& b : blocks)
-    ray_tracer.AddObject(std::move(b));
 
 #ifdef USE_TEXTURES
   ray_tracer.SetBackground("resources/bg/02.ppm");

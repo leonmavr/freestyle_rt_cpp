@@ -9,6 +9,8 @@
 #include "ray.hpp"
 #include <vector>
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include <limits> // numeric_limits
 #include <cmath>
 
@@ -26,10 +28,17 @@ class RayTracer {
 public:
   RayTracer(const Camera& camera, Lights& lights);
 
-  template <typename T>
-  void AddObject(T&& obj) {
+  // variadic template to store any object derived from Object
+  // pass Args to allow constructing objects in place (c/tor with arguments)
+  template <typename T, typename... Args>
+  T& AddObject(Args&&... args) {
+    static_assert(std::is_base_of_v<Object, T>,
+                  "AddObject<T>: T must derive from Object");
     // with std::forward to preserve rvalue/lvalue nature
-    objects_.push_back(std::make_unique<T>(std::forward<T>(obj)));
+    auto obj = std::make_unique<T>(std::forward<Args>(args)...);
+    T& ref = *obj;
+    objects_.push_back(std::move(obj));
+    return ref;
   }
 
   const Image& image();
