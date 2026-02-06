@@ -1,5 +1,3 @@
-#============================= Makefile =============================
-
 # Compiles the project assuming it adheres to the following structure:
 #
 # <root directory>
@@ -47,7 +45,7 @@ ALL_OBJS  := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/$(SRC_DIR)/%.o,$(ALL_SRCS))
 DEMO_SRC := $(SRC_DIR)/$(DEMO).cpp
 DEMO_BIN := $(BIN_DIR)/$(DEMO)
 
-# dependency files for implementation objects
+# dependency files: if a header changes, rebuild the object files
 DEPS := $(ALL_OBJS:.o=.d)
 
 .PHONY: all run clean rebuild convert
